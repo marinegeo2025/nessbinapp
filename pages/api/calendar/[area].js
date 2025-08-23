@@ -10,7 +10,7 @@ const GREEN_URL =
 const BLUE_URL =
   "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/organic-food-and-garden-waste-and-mixed-recycling-blue-bin/wednesday-collections";
 
-// Helper: fetch and parse a table
+// Fetch + parse table
 async function fetchTable(url) {
   const response = await axios.get(url, {
     headers: { "User-Agent": "Mozilla/5.0" },
@@ -20,13 +20,15 @@ async function fetchTable(url) {
   return $("table").first();
 }
 
-// Helper: clean dates like "3rd", "21st" → "3", "21"
-function cleanDay(str) {
-  if (!str || str.toLowerCase().includes("n/a")) return null;
-  return str.replace(/(\d+)(st|nd|rd|th)/, "$1");
+// Clean up "21st" → "21"
+function cleanDay(dayStr) {
+  if (!dayStr) return null;
+  const trimmed = dayStr.trim().toLowerCase();
+  if (trimmed === "n/a" || trimmed === "na") return null;
+  return dayStr.replace(/(\d+)(st|nd|rd|th)/, "$1");
 }
 
-// Parse Black Bin split (North vs South Ness)
+// Parse Black bins: Ness vs Galson
 function parseBlackBins($table) {
   const headers = [];
   $table.find("thead th").each((i, th) => headers.push($(th).text().trim()));
@@ -35,43 +37,42 @@ function parseBlackBins($table) {
   const galson = {};
 
   $table.find("tbody tr").each((i, row) => {
-    const cells = [];
-    $(row).find("td").each((j, cell) => cells.push($(cell).text().trim()));
-
+    const cells = $(row).find("td");
     if (cells.length >= 2) {
-      const area = cells[0];
+      const area = $(cells[0]).text().trim();
       for (let i = 1; i < cells.length; i++) {
         const month = headers[i];
-        const dates = cells[i].split(",").map(d => d.trim());
+        const dates = $(cells[i]).text().trim();
+        if (!dates || dates.toLowerCase() === "n/a") continue;
+        const parts = dates.split(",").map((d) => d.trim());
         if (area.includes("Ness")) {
-          ness[month] = (ness[month] || []).concat(dates);
+          ness[month] = (ness[month] || []).concat(parts);
         } else if (area.includes("Galson")) {
-          galson[month] = (galson[month] || []).concat(dates);
+          galson[month] = (galson[month] || []).concat(parts);
         }
       }
     }
   });
-
   return { ness, galson };
 }
 
-// Generic parse (Blue / Green)
+// Generic parse for Blue/Green
 function parseBinData($table, keyword) {
   const headers = [];
   $table.find("thead th").each((i, th) => headers.push($(th).text().trim()));
 
   const data = {};
   $table.find("tbody tr").each((i, row) => {
-    const cells = [];
-    $(row).find("td").each((j, cell) => cells.push($(cell).text().trim()));
-
+    const cells = $(row).find("td");
     if (cells.length >= 2) {
-      const area = cells[0];
+      const area = $(cells[0]).text().trim();
       if (area.includes(keyword)) {
         for (let i = 1; i < cells.length; i++) {
           const month = headers[i];
-          const dates = cells[i].split(",").map(d => d.trim());
-          data[month] = (data[month] || []).concat(dates);
+          const dates = $(cells[i]).text().trim();
+          if (!dates || dates.toLowerCase() === "n/a") continue;
+          const parts = dates.split(",").map((d) => d.trim());
+          data[month] = (data[month] || []).concat(parts);
         }
       }
     }
@@ -80,11 +81,11 @@ function parseBinData($table, keyword) {
 }
 
 // Build ICS events
-function buildEvents(binColor, data, areaName) {
+function buildEvents(binColor, binData, areaName) {
   const year = new Date().getFullYear();
   const events = [];
 
-  for (const [month, dates] of Object.entries(data)) {
+  for (const [month, dates] of Object.entries(binData)) {
     for (const date of dates) {
       const clean = cleanDay(date);
       if (!clean) continue;
@@ -109,7 +110,7 @@ export default async function handler(req, res) {
   const { area } = req.query;
 
   try {
-    // Fetch data
+    // Fetch and parse all tables
     const blackTable = await fetchTable(BLACK_URL);
     const { ness, galson } = parseBlackBins(blackTable);
 
@@ -119,7 +120,7 @@ export default async function handler(req, res) {
     const greenTable = await fetchTable(GREEN_URL);
     const greenData = parseBinData(greenTable, "Ness");
 
-    // Build calendar
+    // Build calendar events
     let events = [];
     if (area === "north") {
       events = events.concat(buildEvents("Black", ness, "North Ness"));
@@ -128,11 +129,20 @@ export default async function handler(req, res) {
     } else {
       return res.status(404).send("Area not found");
     }
+
+    // Add Blue + Green bins (shared for both areas)
     events = events.concat(buildEvents("Blue", blueData, "Ness"));
     events = events.concat(buildEvents("Green", greenData, "Ness"));
 
+    if (events.length === 0) {
+      return res.status(500).send("No events found");
+    }
+
     const { error, value } = createEvents(events);
-    if (error) return res.status(500).send("Error creating ICS");
+    if (error) {
+      console.error("ICS Error:", error);
+      return res.status(500).send("Failed to build calendar");
+    }
 
     res.setHeader("Content-Type", "text/calendar; charset=utf-8");
     res.setHeader(
@@ -141,7 +151,7 @@ export default async function handler(req, res) {
     );
     res.send(value);
   } catch (err) {
-    console.error(err);
+    console.error("Calendar build error:", err);
     res.status(500).send("Failed to build calendar");
   }
 }
