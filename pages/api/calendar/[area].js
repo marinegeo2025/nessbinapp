@@ -10,67 +10,31 @@ const BLUE_URL =
 const GREEN_URL =
   "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/glass-green-bin-collections/friday-collections";
 
-// Helper: clean "21st" → 21
-function cleanDate(str) {
-  if (!str) return null;
-  const match = str.trim().match(/^(\d+)/);
+// Clean "21st" → 21
+function cleanDate(d) {
+  if (!d) return null;
+  const match = d.trim().match(/^(\d+)/);
   return match ? parseInt(match[1], 10) : null;
 }
-function parseDates(cellText) {
-  if (!cellText || cellText.toLowerCase() === "n/a") return [];
-  return cellText
-    .split(",")
-    .map((d) => cleanDate(d))
-    .filter((n) => n !== null && n >= 1 && n <= 31);
-}
 
-// Scrape table
-async function fetchTable(url) {
-  const response = await axios.get(url, {
-    headers: { "User-Agent": "Mozilla/5.0" },
-  });
-  const $ = cheerio.load(response.data);
-  return $("table").first();
-}
-
-// Parse Black → Ness vs Galson
-function parseBlackBins($table) {
+// Parse a bin table into { month: [dates...] }
+function parseBinTable($, keyword) {
   const headers = [];
-  $table.find("thead th").each((i, th) => headers.push($(th).text().trim()));
-  const ness = {};
-  const galson = {};
-  $table.find("tbody tr").each((i, row) => {
-    const cells = $(row).find("td");
-    if (cells.length >= 2) {
-      const area = $(cells[0]).text().trim();
-      for (let i = 1; i < cells.length; i++) {
-        const month = headers[i];
-        const dates = parseDates($(cells[i]).text().trim());
-        if (area.includes("Ness")) {
-          ness[month] = (ness[month] || []).concat(dates);
-        } else if (area.includes("Galson")) {
-          galson[month] = (galson[month] || []).concat(dates);
-        }
-      }
-    }
-  });
-  return { ness, galson };
-}
+  $("thead th").each((i, th) => headers.push($(th).text().trim()));
 
-// Generic parser (Blue / Green)
-function parseBinData($table, keyword) {
-  const headers = [];
-  $table.find("thead th").each((i, th) => headers.push($(th).text().trim()));
   const data = {};
-  $table.find("tbody tr").each((i, row) => {
+  $("tbody tr").each((i, row) => {
     const cells = $(row).find("td");
     if (cells.length >= 2) {
       const area = $(cells[0]).text().trim();
       if (area.includes(keyword)) {
         for (let i = 1; i < cells.length; i++) {
           const month = headers[i];
-          const dates = parseDates($(cells[i]).text().trim());
-          data[month] = (data[month] || []).concat(dates);
+          const dates = $(cells[i]).text().trim();
+          if (dates && dates.toLowerCase() !== "n/a") {
+            const parts = dates.split(",").map((x) => cleanDate(x)).filter(Boolean);
+            data[month] = (data[month] || []).concat(parts);
+          }
         }
       }
     }
@@ -78,10 +42,40 @@ function parseBinData($table, keyword) {
   return data;
 }
 
-// Build events
+// Parse black bin separately (Ness vs Galson)
+function parseBlackBins($) {
+  const headers = [];
+  $("thead th").each((i, th) => headers.push($(th).text().trim()));
+
+  const ness = {};
+  const galson = {};
+
+  $("tbody tr").each((i, row) => {
+    const cells = $(row).find("td");
+    if (cells.length >= 2) {
+      const area = $(cells[0]).text().trim();
+      for (let i = 1; i < cells.length; i++) {
+        const month = headers[i];
+        const dates = $(cells[i]).text().trim();
+        if (dates && dates.toLowerCase() !== "n/a") {
+          const parts = dates.split(",").map((x) => cleanDate(x)).filter(Boolean);
+          if (area.includes("Ness")) {
+            ness[month] = (ness[month] || []).concat(parts);
+          } else if (area.includes("Galson")) {
+            galson[month] = (galson[month] || []).concat(parts);
+          }
+        }
+      }
+    }
+  });
+  return { ness, galson };
+}
+
+// Convert parsed data to ICS events
 function buildEvents(binColor, areaName, data) {
   const year = new Date().getFullYear();
   const events = [];
+
   for (const [month, days] of Object.entries(data)) {
     for (const day of days) {
       const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
@@ -96,18 +90,24 @@ function buildEvents(binColor, areaName, data) {
 }
 
 export default async function handler(req, res) {
-  const { area, debug } = req.query;
+  const { area } = req.query;
 
   try {
-    // Scrape tables
-    const blackTable = await fetchTable(BLACK_URL);
-    const { ness, galson } = parseBlackBins(blackTable);
-    const blueTable = await fetchTable(BLUE_URL);
-    const blueData = parseBinData(blueTable, "Ness");
-    const greenTable = await fetchTable(GREEN_URL);
-    const greenData = parseBinData(greenTable, "Ness");
+    // Scrape black bins
+    const blackResp = await axios.get(BLACK_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
+    const $black = cheerio.load(blackResp.data);
+    const { ness, galson } = parseBlackBins($black);
 
-    // Build events
+    // Scrape blue bins
+    const blueResp = await axios.get(BLUE_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
+    const $blue = cheerio.load(blueResp.data);
+    const blueData = parseBinTable($blue, "Ness");
+
+    // Scrape green bins
+    const greenResp = await axios.get(GREEN_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
+    const $green = cheerio.load(greenResp.data);
+    const greenData = parseBinTable($green, "Ness");
+
     let events = [];
     if (area === "north") {
       events = [
@@ -125,16 +125,10 @@ export default async function handler(req, res) {
       return res.status(404).send("Area not found");
     }
 
-    // FORCE DEBUG MODE
-    if (debug === "1") {
-      return res.status(200).json(events);
-    }
-
     if (events.length === 0) {
       return res.status(500).send("No events found");
     }
 
-    // ICS generation
     const { error, value } = createEvents(events);
     if (error) {
       console.error("ICS Error:", error, events);
