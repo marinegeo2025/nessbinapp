@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     const table = $("table").first();
 
     if (!table.length) {
-      return res.status(404).json({ error: "Bin collection info not found" });
+      return res.status(404).send("<p>Could not find bin collection info.</p>");
     }
 
     const headers = [];
@@ -31,8 +31,61 @@ export default async function handler(req, res) {
       if (rowData.length > 0) rows.push(rowData);
     });
 
-    res.status(200).json({ headers, rows });
+    // Render HTML directly
+    res.setHeader("Content-Type", "text/html");
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <title>Black Bin Schedule</title>
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+              "Helvetica Neue", Arial, sans-serif;
+            padding: 20px;
+            background: #f7f7f7;
+            text-align: center;
+          }
+          table {
+            border-collapse: collapse;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+          }
+          th {
+            background: #333;
+            color: white;
+          }
+          tr:nth-child(even) {
+            background: #f9f9f9;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>🗑 Black Bin Collection Schedule</h1>
+        <table>
+          <thead>
+            <tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>
+          </thead>
+          <tbody>
+            ${rows
+              .map(
+                r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `);
   } catch (err) {
-    res.status(500).json({ error: "Error fetching data", details: err.message });
+    res.status(500).send(`<p>Error fetching data: ${err.message}</p>`);
   }
 }
