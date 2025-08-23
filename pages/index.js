@@ -1,177 +1,202 @@
-import { useEffect, useState } from "react";
+import Head from "next/head";
 
 export default function Home() {
-  const [selectedBin, setSelectedBin] = useState(null);
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-    if (selectedBin) {
-      fetch(`/api/${selectedBin}`)
-        .then(r => r.json())
-        .then(setData)
-        .catch(() => setData({ error: "Could not load data" }));
-    }
-  }, [selectedBin]);
-
-  const renderTable = (data) => {
-    if (!data) return null;
-    if (data.error) return <p className="error">{data.error}</p>;
-
-    return (
-      <div className="table">
-        <table>
-          <thead>
-            <tr>
-              {data.headers.map((h, i) => (
-                <th key={i}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.rows.map((row, i) => (
-              <tr key={i}>
-                {row.map((cell, j) => (
-                  <td key={j}>{cell}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
-
   return (
-    <main>
-      <h1>🗑️ Ness Bin Collection Dates</h1>
-      <p className="intro">
-        Clicking the black, blue, and green buttons below will display the CNES
-        collection schedules for all Ness villages.
-      </p>
+    <>
+      <Head>
+        <title>Ness Bins</title>
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        />
+      </Head>
 
-      <p>Select the bin type to view the latest collection dates:</p>
-
-      <div className="buttons">
-        <button className="black" onClick={() => setSelectedBin("black")}>
-          🗑 Black Bin (General Waste)
-        </button>
-        <button className="blue" onClick={() => setSelectedBin("blue")}>
-          ♻️ Blue Bin (Plastics and Paper)
-        </button>
-        <button className="green" onClick={() => setSelectedBin("green")}>
-          🍾 Green Bin (Glass)
-        </button>
-      </div>
-
-      {renderTable(data)}
-
-      <h2>📅 Open the Ness Bin Collection Schedules in Your Calendar:</h2>
-
-      <div className="banners">
-        <a
-          href="/api/calendar/north"
-          className="banner north-bin-link"
-        >
-          <div className="overlay">
-            <h3>North Ness Bin Schedule</h3>
-            <p>
-              (Knockaird, Fivepenny, Butt, Eoropie, Port of Ness, Lionel,
-              Eorodale, Adabrock, Cross Skigersta)
-            </p>
-          </div>
-        </a>
-
-        <a
-          href="/api/calendar/south"
-          className="banner south-bin-link"
-        >
-          <div className="overlay">
-            <h3>South Ness Bin Schedule</h3>
-            <p>
-              (Habost, Swainbost, Cross, North and South Dell)
-            </p>
-          </div>
-        </a>
-      </div>
-
-      <footer>
-        <p>
-          Created by Alex Barnard using Vercel. Data from{" "}
-          <a href="https://www.cne-siar.gov.uk/bins-and-recycling/">
-            CNES Bins and Recycling
-          </a>.
+      <div className="container">
+        <h1>
+          <i className="fas fa-trash"></i> Ness Bin Collection Dates
+        </h1>
+        <p className="villages">
+          Clicking the black, blue, and green buttons below will display the CNES
+          collection schedules for: Lionel, Habost, Swainbost, Cross, North Dell,
+          South Dell, Fivepenny, Butt, Cross Skigersta, Skigersta, Eorodale,
+          Adabrock, Port of Ness, Knockaird, and Eoropie.
         </p>
-        <p>
-          Shared under a{" "}
-          <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+        <p>Select the bin type to view the latest collection dates:</p>
+
+        <ul className="bin-list">
+          <li className="bin-item">
+            <a href="/api/black" className="bin-link black">
+              <i className="fas fa-dumpster icon"></i> Black Bin (General Waste)
+            </a>
+          </li>
+          <li className="bin-item">
+            <a href="/api/blue" className="bin-link blue">
+              <i className="fas fa-recycle icon"></i> Blue Bin (Plastics and Paper)
+            </a>
+          </li>
+          <li className="bin-item">
+            <a href="/api/green" className="bin-link green">
+              <i className="fas fa-wine-bottle icon"></i> Green Bin (Glass)
+            </a>
+          </li>
+        </ul>
+
+        <div style={{ marginTop: "20px" }}>
+          <h3>📅 Open the Ness Bin Collection Schedules in Your Calendar:</h3>
+          <a href="/api/calendar/north" className="bin-link north-bin-link">
+            <i className="fas fa-download icon"></i> North Ness Bin Schedule
+            <br />
+            <span className="subtext">
+              (Knockaird, Fivepenny, Butt, Eoropie, Port of Ness, Lionel, Eorodale,
+              Adabrock, Cross Skigersta)
+            </span>
+          </a>
+          <a href="/api/calendar/south" className="bin-link south-bin-link">
+            <i className="fas fa-download icon"></i> South Ness Bin Schedule
+            <br />
+            <span className="subtext">
+              (Habost, Swainbost, Cross, North and South Dell)
+            </span>
+          </a>
+        </div>
+
+        <p className="credit">
+          Created by Alex Barnard using Vercel. Each time this app loads, it
+          scrapes data from the CNES website, meaning that it is up to date at
+          the time the app is opened. The data used are from{" "}
+          <a
+            href="https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris"
+            target="_blank"
+          >
+            CNES Bins and Recycling
+          </a>
+          .
+          <br />
+          <br />
+          This free tool is shared under a{" "}
+          <a
+            href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+            target="_blank"
+          >
             Creative Commons Attribution-NonCommercial-ShareAlike 4.0
+            International
           </a>{" "}
           licence.
         </p>
-        <p className="love">💚 WE LOVE NESS! 💚</p>
-      </footer>
+
+        <p className="cute-text">
+          <span className="heart">💚</span> WE LOVE NESS!{" "}
+          <span className="heart">💚</span>
+        </p>
+      </div>
 
       <style jsx>{`
-        main {
-          max-width: 900px;
-          margin: 0 auto;
-          padding: 2rem;
+        body {
+          margin: 0;
+          padding: 30px;
+          background: #f7f7f7;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+            "Helvetica Neue", Arial, sans-serif;
           text-align: center;
-          font-family: Arial, sans-serif;
         }
-        h1 { color: #006400; }
-        .intro { font-style: italic; margin-bottom: 1rem; }
-        .buttons {
+        .container {
+          max-width: 600px;
+          margin: 0 auto;
+          background: white;
+          padding: 20px;
+          border-radius: 12px;
+          box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+          font-size: 24px;
+          color: #067f0b;
+          margin-bottom: 15px;
+        }
+        .villages {
+          font-size: 12px;
+          font-style: italic;
+          color: #666;
+        }
+        .bin-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+        .bin-item {
+          margin: 15px 0;
+        }
+        .bin-link {
           display: flex;
           flex-direction: column;
-          gap: 1rem;
-          margin: 2rem 0;
-        }
-        button {
-          padding: 1rem;
-          border: none;
-          border-radius: 8px;
-          font-size: 1.1rem;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          margin: 15px auto;
+          padding: 20px;
+          width: 90%;
           color: #fff;
-          cursor: pointer;
-        }
-        button.black { background: #333; }
-        button.blue { background: #0070f3; }
-        button.green { background: #1f9d55; }
-        .table { margin: 2rem 0; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 0.5rem; }
-        th { background: #f9f9f9; }
-        .banners {
-          display: grid;
-          gap: 1rem;
-          margin: 2rem 0;
-        }
-        .banner {
-          display: block;
-          position: relative;
-          color: white;
+          font-size: 20px;
+          font-weight: 600;
           text-decoration: none;
+          position: relative;
+          z-index: 1;
           border-radius: 8px;
-          overflow: hidden;
-          height: 160px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+          transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
+          min-height: 50px;
+        }
+        .bin-link:hover {
+          transform: scale(1.05);
+        }
+        .black {
+          background: #333;
+        }
+        .blue {
+          background: #007bff;
+        }
+        .green {
+          background: #28a745;
+        }
+        .north-bin-link {
+          background-image: url("/images/north-ness.jpeg");
           background-size: cover;
           background-position: center;
         }
-        .north-bin-link { background-image: url("/images/north-ness.jpeg"); }
-        .south-bin-link { background-image: url("/images/south-ness.jpeg"); }
-        .overlay {
-          background: rgba(0,0,0,0.5);
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          padding: 1rem;
+        .south-bin-link {
+          background-image: url("/images/south-ness.jpeg");
+          background-size: cover;
+          background-position: center;
         }
-        footer { margin-top: 3rem; font-size: 0.9rem; }
-        .love { font-weight: bold; color: #1f9d55; }
+        .subtext {
+          font-size: 0.75em;
+          font-weight: normal;
+        }
+        .credit {
+          font-size: 11px;
+          margin-top: 20px;
+        }
+        .cute-text {
+          color: #067f0b;
+          font-size: 1rem;
+          font-weight: bold;
+          text-align: center;
+        }
+        @keyframes heartbeat {
+          0% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.2);
+          }
+          100% {
+            transform: scale(1);
+          }
+        }
+        .heart {
+          display: inline-block;
+          animation: heartbeat 1s infinite;
+        }
       `}</style>
-    </main>
+    </>
   );
 }
