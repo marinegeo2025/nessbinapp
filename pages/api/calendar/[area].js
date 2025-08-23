@@ -10,48 +10,32 @@ const BLUE_URL =
 const GREEN_URL =
   "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/glass-green-bin-collections/friday-collections";
 
-// Fetch + parse table
+// Fetch & parse a CNES table
 async function fetchTable(url) {
   const response = await axios.get(url, {
     headers: { "User-Agent": "Mozilla/5.0" },
+    timeout: 15000,
   });
   const $ = cheerio.load(response.data);
   return $("table").first();
 }
 
-// Clean date strings ("21st" → "21")
+// Clean "21st" → 21, ignore "n/a"
 function cleanDate(dateStr) {
   if (!dateStr) return null;
   const trimmed = dateStr.trim().toLowerCase();
   if (trimmed === "n/a" || trimmed === "na") return null;
-  return dateStr.replace(/(\d+)(st|nd|rd|th)/, "$1");
+
+  const match = trimmed.match(/^(\d+)/);
+  if (!match) return null;
+
+  const dayNum = parseInt(match[1], 10);
+  if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) return null;
+
+  return dayNum;
 }
 
-// Build events
-function buildEvents(binColor, areaName, data) {
-  const year = new Date().getFullYear();
-  const events = [];
-
-  for (const [month, dates] of Object.entries(data)) {
-    for (const raw of dates) {
-      const day = cleanDate(raw);
-      if (!day) continue;
-
-      const dateString = `${day} ${month} ${year}`;
-      const dt = new Date(dateString);
-      if (isNaN(dt)) continue;
-
-      events.push({
-        title: `${binColor} Bin Collection (${areaName})`,
-        start: [dt.getFullYear(), dt.getMonth() + 1, dt.getDate()],
-        end: [dt.getFullYear(), dt.getMonth() + 1, dt.getDate()],
-      });
-    }
-  }
-  return events;
-}
-
-// Parse Black bins (split Ness vs Galson)
+// Parse Black bins → Ness vs Galson
 function parseBlackBins($table) {
   const headers = [];
   $table.find("thead th").each((i, th) => headers.push($(th).text().trim()));
@@ -79,7 +63,7 @@ function parseBlackBins($table) {
   return { ness, galson };
 }
 
-// Generic parser for Blue/Green
+// Generic parser (Blue / Green)
 function parseBinData($table, keyword) {
   const headers = [];
   $table.find("thead th").each((i, th) => headers.push($(th).text().trim()));
@@ -103,11 +87,34 @@ function parseBinData($table, keyword) {
   return data;
 }
 
+// Build events safely
+function buildEvents(binColor, areaName, binData) {
+  const year = new Date().getFullYear();
+  const events = [];
+
+  for (const [month, dates] of Object.entries(binData)) {
+    for (const raw of dates) {
+      const day = cleanDate(raw);
+      if (!day) continue;
+
+      const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
+      if (isNaN(monthIndex)) continue;
+
+      events.push({
+        title: `${binColor} Bin Collection (${areaName})`,
+        start: [year, monthIndex + 1, day],
+        end: [year, monthIndex + 1, day],
+      });
+    }
+  }
+  return events;
+}
+
 export default async function handler(req, res) {
-  const { area } = req.query;
+  const { area, debug } = req.query;
 
   try {
-    // Scrape all three tables
+    // Scrape all three bin tables
     const blackTable = await fetchTable(BLACK_URL);
     const { ness, galson } = parseBlackBins(blackTable);
 
@@ -117,7 +124,7 @@ export default async function handler(req, res) {
     const greenTable = await fetchTable(GREEN_URL);
     const greenData = parseBinData(greenTable, "Ness");
 
-    // Build events for chosen area
+    // Select which area’s black bins
     let events = [];
     if (area === "north") {
       events = [
@@ -135,13 +142,18 @@ export default async function handler(req, res) {
       return res.status(404).send("Area not found");
     }
 
+    if (debug === "1") {
+      // Debug mode → see parsed events
+      return res.status(200).json(events);
+    }
+
     if (events.length === 0) {
       return res.status(500).send("No events found");
     }
 
     const { error, value } = createEvents(events);
     if (error) {
-      console.error("ICS error:", error);
+      console.error("ICS Error:", error);
       return res.status(500).send("Failed to build calendar");
     }
 
