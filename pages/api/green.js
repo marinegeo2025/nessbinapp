@@ -51,8 +51,8 @@ export default async function handler(req, res) {
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
       </head>
       <body>
+      <body class="green-page">
         <div class="container">
-        <body class="green-page">
           <h1><i class="fas fa-trash"></i> GREEN Bin Collection Dates for Ness</h1>
           ${
             Object.keys(collectionData).length
