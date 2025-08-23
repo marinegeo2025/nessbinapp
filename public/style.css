@@ -17,10 +17,21 @@ body {
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 
+/* Headings */
 h1 {
   font-size: 24px;
   color: #067f0b;
   margin-bottom: 15px;
+}
+h2 {
+  font-size: 18px;
+  color: #444;
+  margin: 15px 0;
+}
+h3 {
+  margin-top: 10px;
+  font-size: 16px;
+  color: #333;
 }
 
 .villages {
@@ -29,7 +40,7 @@ h1 {
   color: #666;
 }
 
-/* Bin Buttons */
+/* Bin Buttons + Banners */
 .bin-list {
   list-style: none;
   padding: 0;
@@ -57,36 +68,20 @@ h1 {
   transform: scale(1.05);
 }
 
-/* Ensure text stays white */
 .bin-link * {
   color: #ffffff;
   position: relative;
   z-index: 1;
 }
 
-/* Black Bin */
-.btn-black {
-  background-color: #343a40;
-}
+/* Bin Button Colors */
+.btn-black { background-color: #343a40; }
+.btn-blue { background-color: #007bff; }
+.btn-green { background-color: #28a745; }
 
-/* Blue Bin */
-.btn-blue {
-  background-color: #007bff;
-}
-
-/* Green Bin */
-.btn-green {
-  background-color: #28a745;
-}
-
-/* Calendar Banners */
-.north-bin-link {
-  background-image: url("/images/north-ness.jpeg");
-}
-
-.south-bin-link {
-  background-image: url("/images/south-ness.jpeg");
-}
+/* Banner Images */
+.north-bin-link { background-image: url("/images/north-ness.jpeg"); }
+.south-bin-link { background-image: url("/images/south-ness.jpeg"); }
 
 .subtext {
   font-size: 0.75em;
@@ -111,13 +106,23 @@ h1 {
   50% { transform: scale(1.2); }
   100% { transform: scale(1); }
 }
-
 .heart {
   display: inline-block;
   animation: heartbeat 1s infinite;
 }
 
-/* Ensure icons keep FA font */
+/* Lists inside scraper pages */
+ul { list-style: none; padding: 0; }
+li {
+  background: #eef3f7;
+  margin: 6px 0;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 1rem;
+  text-align: center;
+}
+
+/* Ensure Font Awesome icons use their own font */
 i {
   font-family: "Font Awesome 6 Free" !important;
   font-weight: 900;
