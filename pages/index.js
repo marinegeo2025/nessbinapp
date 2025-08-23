@@ -25,17 +25,17 @@ export default function Home() {
 
         <ul className="bin-list">
           <li>
-            <a href="/api/black" target="_blank" className="bin-link black">
+            <a href="/api/black" target="_blank" className="bin-link btn-black">
               <i className="fas fa-dumpster icon"></i> Black Bin (General Waste)
             </a>
           </li>
           <li>
-            <a href="/api/blue" target="_blank" className="bin-link blue">
+            <a href="/api/blue" target="_blank" className="bin-link btn-blue">
               <i className="fas fa-recycle icon"></i> Blue Bin (Plastics and Paper)
             </a>
           </li>
           <li>
-            <a href="/api/green" target="_blank" className="bin-link green">
+            <a href="/api/green" target="_blank" className="bin-link btn-green">
               <i className="fas fa-wine-bottle icon"></i> Green Bin (Glass)
             </a>
           </li>
@@ -121,39 +121,43 @@ export default function Home() {
           list-style: none;
           padding: 0;
         }
-        .bin-link {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          margin: 15px auto;
-          padding: 20px;
-          width: 90%;
-          color: #fff;
-          font-size: 20px;
+        .bin-link,
+        .bin-link:visited {
+          display: block;
+          margin: 10px;
+          padding: 15px;
+          font-size: 22px;
           font-weight: 600;
           text-decoration: none;
+          color: #ffffff;
           border-radius: 8px;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
           transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
-          min-height: 50px;
+          min-height: 100px;
+          background-size: cover;
+          background-position: center;
         }
         .bin-link:hover {
           transform: scale(1.05);
         }
-        .black { background: #333; }
-        .blue { background: #007bff; }
-        .green { background: #28a745; }
+        .bin-link * {
+          color: #ffffff;
+          position: relative;
+          z-index: 1;
+        }
+        .btn-black {
+          background-color: #343a40;
+        }
+        .btn-blue {
+          background-color: #007bff;
+        }
+        .btn-green {
+          background-color: #28a745;
+        }
         .north-bin-link {
           background-image: url("/images/north-ness.jpeg");
-          background-size: cover;
-          background-position: center;
         }
         .south-bin-link {
           background-image: url("/images/south-ness.jpeg");
-          background-size: cover;
-          background-position: center;
         }
         .subtext {
           font-size: 0.75em;
@@ -177,6 +181,11 @@ export default function Home() {
         .heart {
           display: inline-block;
           animation: heartbeat 1s infinite;
+        }
+        /* Keep icons using Font Awesome font */
+        i {
+          font-family: "Font Awesome 6 Free" !important;
+          font-weight: 900;
         }
       `}</style>
     </>
