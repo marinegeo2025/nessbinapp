@@ -10,7 +10,7 @@ const GREEN_URL =
 const BLUE_URL =
   "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/organic-food-and-garden-waste-and-mixed-recycling-blue-bin/wednesday-collections";
 
-// Fetch + parse table
+// Fetch and parse a CNES table
 async function fetchTable(url) {
   const response = await axios.get(url, {
     headers: { "User-Agent": "Mozilla/5.0" },
@@ -28,7 +28,7 @@ function cleanDay(dayStr) {
   return dayStr.replace(/(\d+)(st|nd|rd|th)/, "$1");
 }
 
-// Parse Black bins: Ness vs Galson
+// Parse Black bins (split Ness vs Galson)
 function parseBlackBins($table) {
   const headers = [];
   $table.find("thead th").each((i, th) => headers.push($(th).text().trim()));
@@ -56,7 +56,7 @@ function parseBlackBins($table) {
   return { ness, galson };
 }
 
-// Generic parse for Blue/Green
+// Generic parser (Blue/Green)
 function parseBinData($table, keyword) {
   const headers = [];
   $table.find("thead th").each((i, th) => headers.push($(th).text().trim()));
@@ -80,27 +80,28 @@ function parseBinData($table, keyword) {
   return data;
 }
 
-// Build ICS events
+// Build ICS events safely
 function buildEvents(binColor, binData, areaName) {
   const year = new Date().getFullYear();
   const events = [];
 
   for (const [month, dates] of Object.entries(binData)) {
     for (const date of dates) {
+      if (!date) continue;
       const clean = cleanDay(date);
       if (!clean) continue;
 
       const dateString = `${clean} ${month} ${year}`;
       const dt = new Date(dateString);
 
-      if (!isNaN(dt)) {
-        events.push({
-          title: `${binColor} Bin Collection (${areaName})`,
-          start: [dt.getFullYear(), dt.getMonth() + 1, dt.getDate()],
-          end: [dt.getFullYear(), dt.getMonth() + 1, dt.getDate()],
-          startOutputType: "local",
-        });
-      }
+      if (isNaN(dt.getTime())) continue; // skip invalid
+
+      events.push({
+        title: `${binColor} Bin Collection (${areaName})`,
+        start: [dt.getFullYear(), dt.getMonth() + 1, dt.getDate()],
+        end: [dt.getFullYear(), dt.getMonth() + 1, dt.getDate()],
+        startOutputType: "local",
+      });
     }
   }
   return events;
@@ -110,7 +111,7 @@ export default async function handler(req, res) {
   const { area } = req.query;
 
   try {
-    // Fetch and parse all tables
+    // Fetch tables
     const blackTable = await fetchTable(BLACK_URL);
     const { ness, galson } = parseBlackBins(blackTable);
 
@@ -130,7 +131,6 @@ export default async function handler(req, res) {
       return res.status(404).send("Area not found");
     }
 
-    // Add Blue + Green bins (shared for both areas)
     events = events.concat(buildEvents("Blue", blueData, "Ness"));
     events = events.concat(buildEvents("Green", greenData, "Ness"));
 
