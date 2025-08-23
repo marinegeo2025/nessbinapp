@@ -62,7 +62,11 @@ h3 {
 
 .bin-link,
 .bin-link:visited {
-  display: block;
+  display: flex;                /* use flexbox */
+  flex-direction: row;          /* icon + text side by side */
+  align-items: center;          /* vertical centering */
+  justify-content: center;      /* horizontal centering */
+
   margin: 10px;
   padding: 15px;
   font-size: 22px;
@@ -76,6 +80,9 @@ h3 {
   background-position: center center;
   position: relative;
   overflow: hidden;
+}
+.icon {
+  margin-right: 10px;
 }
 
 .bin-link:hover {
