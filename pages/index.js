@@ -62,7 +62,7 @@ export default function Home() {
         </div>
 
         <p className="credit">
-          Created by Alex Barnard using Vercel. Each time this app loads, it
+          Created by Alex Barnard using Github and Vercel. Each time this app loads, it
           scrapes data from the CNES website, meaning that it is up to date at
           the time the app is opened. The data used are from{" "}
           <a
