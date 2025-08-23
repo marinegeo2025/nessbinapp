@@ -10,24 +10,12 @@ const BLUE_URL =
 const GREEN_URL =
   "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/glass-green-bin-collections/friday-collections";
 
-// Fetch CNES table
-async function fetchTable(url) {
-  const response = await axios.get(url, {
-    headers: { "User-Agent": "Mozilla/5.0" },
-    timeout: 15000,
-  });
-  const $ = cheerio.load(response.data);
-  return $("table").first();
-}
-
-// Clean "21st" -> 21
+// Helper: clean "21st" → 21
 function cleanDate(str) {
   if (!str) return null;
   const match = str.trim().match(/^(\d+)/);
   return match ? parseInt(match[1], 10) : null;
 }
-
-// Split and clean multiple dates in one cell
 function parseDates(cellText) {
   if (!cellText || cellText.toLowerCase() === "n/a") return [];
   return cellText
@@ -36,40 +24,21 @@ function parseDates(cellText) {
     .filter((n) => n !== null && n >= 1 && n <= 31);
 }
 
-// Build events (title + start only)
-function buildEvents(binColor, areaName, data) {
-  const year = new Date().getFullYear();
-  const events = [];
-
-  for (const [month, days] of Object.entries(data)) {
-    for (const day of days) {
-      try {
-        const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
-        if (isNaN(monthIndex)) continue;
-
-        const dt = new Date(year, monthIndex, day);
-        if (isNaN(dt.getTime())) continue;
-
-        events.push({
-          title: `${binColor} Bin Collection (${areaName})`,
-          start: [dt.getFullYear(), dt.getMonth() + 1, dt.getDate()],
-        });
-      } catch {
-        continue;
-      }
-    }
-  }
-  return events;
+// Scrape table
+async function fetchTable(url) {
+  const response = await axios.get(url, {
+    headers: { "User-Agent": "Mozilla/5.0" },
+  });
+  const $ = cheerio.load(response.data);
+  return $("table").first();
 }
 
-// Parse black bins (Ness vs Galson)
+// Parse Black → Ness vs Galson
 function parseBlackBins($table) {
   const headers = [];
   $table.find("thead th").each((i, th) => headers.push($(th).text().trim()));
-
   const ness = {};
   const galson = {};
-
   $table.find("tbody tr").each((i, row) => {
     const cells = $(row).find("td");
     if (cells.length >= 2) {
@@ -88,11 +57,10 @@ function parseBlackBins($table) {
   return { ness, galson };
 }
 
-// Generic parser (Blue/Green)
+// Generic parser (Blue / Green)
 function parseBinData($table, keyword) {
   const headers = [];
   $table.find("thead th").each((i, th) => headers.push($(th).text().trim()));
-
   const data = {};
   $table.find("tbody tr").each((i, row) => {
     const cells = $(row).find("td");
@@ -110,17 +78,32 @@ function parseBinData($table, keyword) {
   return data;
 }
 
+// Build events
+function buildEvents(binColor, areaName, data) {
+  const year = new Date().getFullYear();
+  const events = [];
+  for (const [month, days] of Object.entries(data)) {
+    for (const day of days) {
+      const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
+      if (isNaN(monthIndex)) continue;
+      events.push({
+        title: `${binColor} Bin Collection (${areaName})`,
+        start: [year, monthIndex + 1, day],
+      });
+    }
+  }
+  return events;
+}
+
 export default async function handler(req, res) {
   const { area, debug } = req.query;
 
   try {
-    // Scrape CNES
+    // Scrape tables
     const blackTable = await fetchTable(BLACK_URL);
     const { ness, galson } = parseBlackBins(blackTable);
-
     const blueTable = await fetchTable(BLUE_URL);
     const blueData = parseBinData(blueTable, "Ness");
-
     const greenTable = await fetchTable(GREEN_URL);
     const greenData = parseBinData(greenTable, "Ness");
 
@@ -142,9 +125,8 @@ export default async function handler(req, res) {
       return res.status(404).send("Area not found");
     }
 
-    // DEBUG MODE — short-circuit before ICS
+    // FORCE DEBUG MODE
     if (debug === "1") {
-      console.log("DEBUG EVENTS:", events);
       return res.status(200).json(events);
     }
 
@@ -152,6 +134,7 @@ export default async function handler(req, res) {
       return res.status(500).send("No events found");
     }
 
+    // ICS generation
     const { error, value } = createEvents(events);
     if (error) {
       console.error("ICS Error:", error, events);
