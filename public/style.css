@@ -141,3 +141,16 @@ i {
   font-family: "Font Awesome 6 Free" !important;
   font-weight: 900;
 }
+/* Themed page heading colors */
+body.black-page h1 {
+  color: #343a40; /* black bin */
+}
+
+body.blue-page h1 {
+  color: #007bff; /* blue bin */
+}
+
+body.green-page h1 {
+  color: #28a745; /* green bin */
+}
+
