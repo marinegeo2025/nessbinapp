@@ -56,6 +56,7 @@ export default async function handler(req, res) {
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
       </head>
       <body>
+      <body class="black-page">
         <div class="container">
           <h1><i class="fas fa-trash-alt"></i> BLACK Bin Collection Dates</h1>
           <h2>Ness – Knockaird, Fivepenny, Butt, Eoropie, Port of Ness, Lionel, Eorodale, Adabrock, Cross Skigersta</h2>
