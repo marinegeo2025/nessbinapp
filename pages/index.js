@@ -4,7 +4,6 @@ export default function Home() {
   const [selectedBin, setSelectedBin] = useState(null);
   const [data, setData] = useState(null);
 
-  // Fetch data when a bin is selected
   useEffect(() => {
     if (selectedBin) {
       fetch(`/api/${selectedBin}`)
@@ -14,11 +13,40 @@ export default function Home() {
     }
   }, [selectedBin]);
 
+  const renderTable = (data) => {
+    if (!data) return null;
+    if (data.error) return <p className="error">{data.error}</p>;
+
+    return (
+      <div className="table">
+        <table>
+          <thead>
+            <tr>
+              {data.headers.map((h, i) => (
+                <th key={i}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.rows.map((row, i) => (
+              <tr key={i}>
+                {row.map((cell, j) => (
+                  <td key={j}>{cell}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   return (
     <main>
       <h1>🗑️ Ness Bin Collection Dates</h1>
       <p className="intro">
-        Clicking the black, blue, and green buttons below will display the CNES collection schedules for all Ness villages.
+        Clicking the black, blue, and green buttons below will display the CNES
+        collection schedules for all Ness villages.
       </p>
 
       <p>Select the bin type to view the latest collection dates:</p>
@@ -35,53 +63,33 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Table output */}
-      {data && !data.error && (
-        <div className="table">
-          <table>
-            <thead>
-              <tr>
-                {data.headers.map((h, i) => (
-                  <th key={i}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {data.rows.map((row, i) => (
-                <tr key={i}>
-                  {row.map((cell, j) => (
-                    <td key={j}>{cell}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      {data && data.error && <p className="error">{data.error}</p>}
+      {renderTable(data)}
 
       <h2>📅 Open the Ness Bin Collection Schedules in Your Calendar:</h2>
 
       <div className="banners">
         <a
-          href="/ics/north-ness.ics"
+          href="/api/calendar/north"
           className="banner north-bin-link"
-          target="_blank"
         >
           <div className="overlay">
             <h3>North Ness Bin Schedule</h3>
-            <p>(Knockaird, Fivepenny, Butt, Eoropie, Port of Ness, Lionel, Eorodale, Adabrock, Cross Skigersta)</p>
+            <p>
+              (Knockaird, Fivepenny, Butt, Eoropie, Port of Ness, Lionel,
+              Eorodale, Adabrock, Cross Skigersta)
+            </p>
           </div>
         </a>
 
         <a
-          href="/ics/south-ness.ics"
+          href="/api/calendar/south"
           className="banner south-bin-link"
-          target="_blank"
         >
           <div className="overlay">
             <h3>South Ness Bin Schedule</h3>
-            <p>(Habost, Swainbost, Cross, North and South Dell)</p>
+            <p>
+              (Habost, Swainbost, Cross, North and South Dell)
+            </p>
           </div>
         </a>
       </div>
@@ -111,13 +119,8 @@ export default function Home() {
           text-align: center;
           font-family: Arial, sans-serif;
         }
-        h1 {
-          color: #006400;
-        }
-        .intro {
-          font-style: italic;
-          margin-bottom: 1rem;
-        }
+        h1 { color: #006400; }
+        .intro { font-style: italic; margin-bottom: 1rem; }
         .buttons {
           display: flex;
           flex-direction: column;
@@ -166,10 +169,7 @@ export default function Home() {
           align-items: center;
           padding: 1rem;
         }
-        footer {
-          margin-top: 3rem;
-          font-size: 0.9rem;
-        }
+        footer { margin-top: 3rem; font-size: 0.9rem; }
         .love { font-weight: bold; color: #1f9d55; }
       `}</style>
     </main>
