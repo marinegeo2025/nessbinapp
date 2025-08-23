@@ -16,9 +16,7 @@ export default async function handler(req, res) {
     const table = $("table").first();
 
     if (!table.length) {
-      return res
-        .status(404)
-        .send("<p>Could not find bin collection information.</p>");
+      return res.status(404).send("<p>No blue bin collection data found.</p>");
     }
 
     const headers = [];
@@ -49,52 +47,8 @@ export default async function handler(req, res) {
       <head>
         <meta charset="UTF-8">
         <title>BLUE Bin Collection Dates for Ness</title>
+        <link rel="stylesheet" href="/style.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-        <style>
-          body {
-            font-family: 'Poppins', sans-serif;
-            background: #f0f8ff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            overflow-x: hidden;
-          }
-          .container {
-            background: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-            width: 90%;
-            max-width: 500px;
-            text-align: center;
-            box-sizing: border-box;
-          }
-          h1 {
-            font-size: clamp(1.8rem, 5vw, 2.4rem);
-            color: #0044cc;
-          }
-          h2 {
-            font-size: clamp(1.5rem, 4vw, 2rem);
-            color: #444;
-            font-weight: 600;
-          }
-          ul { list-style: none; padding: 0; }
-          li {
-            background: #dff1ff;
-            margin: 10px 0;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 1.2rem;
-            color: #333;
-            font-weight: 500;
-            text-align: center;
-          }
-        </style>
       </head>
       <body>
         <div class="container">
