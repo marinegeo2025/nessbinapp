@@ -9,6 +9,7 @@ export default function Home() {
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         />
+        <link rel="stylesheet" href="/style.css" />
       </Head>
 
       <div className="container">
@@ -89,105 +90,6 @@ export default function Home() {
           <span className="heart">💚</span>
         </p>
       </div>
-
-      <style jsx>{`
-        body {
-          margin: 0;
-          padding: 30px;
-          background: #f7f7f7;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-            "Helvetica Neue", Arial, sans-serif;
-          text-align: center;
-        }
-        .container {
-          max-width: 600px;
-          margin: 0 auto;
-          background: white;
-          padding: 20px;
-          border-radius: 12px;
-          box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-          font-size: 24px;
-          color: #067f0b;
-          margin-bottom: 15px;
-        }
-        .villages {
-          font-size: 12px;
-          font-style: italic;
-          color: #666;
-        }
-        .bin-list {
-          list-style: none;
-          padding: 0;
-        }
-        .bin-link,
-        .bin-link:visited {
-          display: block;
-          margin: 10px;
-          padding: 15px;
-          font-size: 22px;
-          font-weight: 600;
-          text-decoration: none;
-          color: #ffffff;
-          border-radius: 8px;
-          transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
-          min-height: 100px;
-          background-size: cover;
-          background-position: center;
-        }
-        .bin-link:hover {
-          transform: scale(1.05);
-        }
-        .bin-link * {
-          color: #ffffff;
-          position: relative;
-          z-index: 1;
-        }
-        .btn-black {
-          background-color: #343a40;
-        }
-        .btn-blue {
-          background-color: #007bff;
-        }
-        .btn-green {
-          background-color: #28a745;
-        }
-        .north-bin-link {
-          background-image: url("/images/north-ness.jpeg");
-        }
-        .south-bin-link {
-          background-image: url("/images/south-ness.jpeg");
-        }
-        .subtext {
-          font-size: 0.75em;
-          font-weight: normal;
-        }
-        .credit {
-          font-size: 11px;
-          margin-top: 20px;
-        }
-        .cute-text {
-          color: #067f0b;
-          font-size: 1rem;
-          font-weight: bold;
-          text-align: center;
-        }
-        @keyframes heartbeat {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.2); }
-          100% { transform: scale(1); }
-        }
-        .heart {
-          display: inline-block;
-          animation: heartbeat 1s infinite;
-        }
-        /* Keep icons using Font Awesome font */
-        i {
-          font-family: "Font Awesome 6 Free" !important;
-          font-weight: 900;
-        }
-      `}</style>
     </>
   );
 }
