@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Ness Bins</title>
+        <title>Ness Bin Collection Dates</title>
         <link
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
@@ -24,18 +24,18 @@ export default function Home() {
         <p>Select the bin type to view the latest collection dates:</p>
 
         <ul className="bin-list">
-          <li className="bin-item">
-            <a href="/api/black" className="bin-link black">
+          <li>
+            <a href="/api/black" target="_blank" className="bin-link black">
               <i className="fas fa-dumpster icon"></i> Black Bin (General Waste)
             </a>
           </li>
-          <li className="bin-item">
-            <a href="/api/blue" className="bin-link blue">
+          <li>
+            <a href="/api/blue" target="_blank" className="bin-link blue">
               <i className="fas fa-recycle icon"></i> Blue Bin (Plastics and Paper)
             </a>
           </li>
-          <li className="bin-item">
-            <a href="/api/green" className="bin-link green">
+          <li>
+            <a href="/api/green" target="_blank" className="bin-link green">
               <i className="fas fa-wine-bottle icon"></i> Green Bin (Glass)
             </a>
           </li>
@@ -120,10 +120,6 @@ export default function Home() {
         .bin-list {
           list-style: none;
           padding: 0;
-          margin: 0;
-        }
-        .bin-item {
-          margin: 15px 0;
         }
         .bin-link {
           display: flex;
@@ -138,8 +134,6 @@ export default function Home() {
           font-size: 20px;
           font-weight: 600;
           text-decoration: none;
-          position: relative;
-          z-index: 1;
           border-radius: 8px;
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
           transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
@@ -148,15 +142,9 @@ export default function Home() {
         .bin-link:hover {
           transform: scale(1.05);
         }
-        .black {
-          background: #333;
-        }
-        .blue {
-          background: #007bff;
-        }
-        .green {
-          background: #28a745;
-        }
+        .black { background: #333; }
+        .blue { background: #007bff; }
+        .green { background: #28a745; }
         .north-bin-link {
           background-image: url("/images/north-ness.jpeg");
           background-size: cover;
@@ -182,15 +170,9 @@ export default function Home() {
           text-align: center;
         }
         @keyframes heartbeat {
-          0% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.2);
-          }
-          100% {
-            transform: scale(1);
-          }
+          0% { transform: scale(1); }
+          50% { transform: scale(1.2); }
+          100% { transform: scale(1); }
         }
         .heart {
           display: inline-block;
