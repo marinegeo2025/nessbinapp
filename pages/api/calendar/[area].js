@@ -36,7 +36,7 @@ function parseDates(cellText) {
     .filter((n) => n !== null && n >= 1 && n <= 31);
 }
 
-// Build ICS events safely
+// Build events (title + start only)
 function buildEvents(binColor, areaName, data) {
   const year = new Date().getFullYear();
   const events = [];
@@ -53,10 +53,8 @@ function buildEvents(binColor, areaName, data) {
         events.push({
           title: `${binColor} Bin Collection (${areaName})`,
           start: [dt.getFullYear(), dt.getMonth() + 1, dt.getDate()],
-          end: [dt.getFullYear(), dt.getMonth() + 1, dt.getDate()],
         });
-      } catch (err) {
-        // skip bad event
+      } catch {
         continue;
       }
     }
@@ -144,8 +142,10 @@ export default async function handler(req, res) {
       return res.status(404).send("Area not found");
     }
 
+    // DEBUG MODE — short-circuit before ICS
     if (debug === "1") {
-      return res.json(events);
+      console.log("DEBUG EVENTS:", events);
+      return res.status(200).json(events);
     }
 
     if (events.length === 0) {
@@ -154,7 +154,7 @@ export default async function handler(req, res) {
 
     const { error, value } = createEvents(events);
     if (error) {
-      console.error("ICS Error:", error);
+      console.error("ICS Error:", error, events);
       return res.status(500).send("Failed to build calendar");
     }
 
