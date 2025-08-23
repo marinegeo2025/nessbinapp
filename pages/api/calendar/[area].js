@@ -10,7 +10,7 @@ const BLUE_URL =
 const GREEN_URL =
   "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/glass-green-bin-collections/friday-collections";
 
-// Fetch & parse a CNES table
+// Fetch CNES table
 async function fetchTable(url) {
   const response = await axios.get(url, {
     headers: { "User-Agent": "Mozilla/5.0" },
@@ -20,22 +20,51 @@ async function fetchTable(url) {
   return $("table").first();
 }
 
-// Clean "21st" → 21, ignore "n/a"
-function cleanDate(dateStr) {
-  if (!dateStr) return null;
-  const trimmed = dateStr.trim().toLowerCase();
-  if (trimmed === "n/a" || trimmed === "na") return null;
-
-  const match = trimmed.match(/^(\d+)/);
-  if (!match) return null;
-
-  const dayNum = parseInt(match[1], 10);
-  if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) return null;
-
-  return dayNum;
+// Clean "21st" -> 21
+function cleanDate(str) {
+  if (!str) return null;
+  const match = str.trim().match(/^(\d+)/);
+  return match ? parseInt(match[1], 10) : null;
 }
 
-// Parse Black bins → Ness vs Galson
+// Split and clean multiple dates in one cell
+function parseDates(cellText) {
+  if (!cellText || cellText.toLowerCase() === "n/a") return [];
+  return cellText
+    .split(",")
+    .map((d) => cleanDate(d))
+    .filter((n) => n !== null && n >= 1 && n <= 31);
+}
+
+// Build ICS events safely
+function buildEvents(binColor, areaName, data) {
+  const year = new Date().getFullYear();
+  const events = [];
+
+  for (const [month, days] of Object.entries(data)) {
+    for (const day of days) {
+      try {
+        const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
+        if (isNaN(monthIndex)) continue;
+
+        const dt = new Date(year, monthIndex, day);
+        if (isNaN(dt.getTime())) continue;
+
+        events.push({
+          title: `${binColor} Bin Collection (${areaName})`,
+          start: [dt.getFullYear(), dt.getMonth() + 1, dt.getDate()],
+          end: [dt.getFullYear(), dt.getMonth() + 1, dt.getDate()],
+        });
+      } catch (err) {
+        // skip bad event
+        continue;
+      }
+    }
+  }
+  return events;
+}
+
+// Parse black bins (Ness vs Galson)
 function parseBlackBins($table) {
   const headers = [];
   $table.find("thead th").each((i, th) => headers.push($(th).text().trim()));
@@ -49,13 +78,11 @@ function parseBlackBins($table) {
       const area = $(cells[0]).text().trim();
       for (let i = 1; i < cells.length; i++) {
         const month = headers[i];
-        const dates = $(cells[i]).text().trim();
-        if (!dates || dates.toLowerCase() === "n/a") continue;
-        const parts = dates.split(",").map((d) => d.trim());
+        const dates = parseDates($(cells[i]).text().trim());
         if (area.includes("Ness")) {
-          ness[month] = (ness[month] || []).concat(parts);
+          ness[month] = (ness[month] || []).concat(dates);
         } else if (area.includes("Galson")) {
-          galson[month] = (galson[month] || []).concat(parts);
+          galson[month] = (galson[month] || []).concat(dates);
         }
       }
     }
@@ -63,7 +90,7 @@ function parseBlackBins($table) {
   return { ness, galson };
 }
 
-// Generic parser (Blue / Green)
+// Generic parser (Blue/Green)
 function parseBinData($table, keyword) {
   const headers = [];
   $table.find("thead th").each((i, th) => headers.push($(th).text().trim()));
@@ -76,10 +103,8 @@ function parseBinData($table, keyword) {
       if (area.includes(keyword)) {
         for (let i = 1; i < cells.length; i++) {
           const month = headers[i];
-          const dates = $(cells[i]).text().trim();
-          if (!dates || dates.toLowerCase() === "n/a") continue;
-          const parts = dates.split(",").map((d) => d.trim());
-          data[month] = (data[month] || []).concat(parts);
+          const dates = parseDates($(cells[i]).text().trim());
+          data[month] = (data[month] || []).concat(dates);
         }
       }
     }
@@ -87,34 +112,11 @@ function parseBinData($table, keyword) {
   return data;
 }
 
-// Build events safely
-function buildEvents(binColor, areaName, binData) {
-  const year = new Date().getFullYear();
-  const events = [];
-
-  for (const [month, dates] of Object.entries(binData)) {
-    for (const raw of dates) {
-      const day = cleanDate(raw);
-      if (!day) continue;
-
-      const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
-      if (isNaN(monthIndex)) continue;
-
-      events.push({
-        title: `${binColor} Bin Collection (${areaName})`,
-        start: [year, monthIndex + 1, day],
-        end: [year, monthIndex + 1, day],
-      });
-    }
-  }
-  return events;
-}
-
 export default async function handler(req, res) {
   const { area, debug } = req.query;
 
   try {
-    // Scrape all three bin tables
+    // Scrape CNES
     const blackTable = await fetchTable(BLACK_URL);
     const { ness, galson } = parseBlackBins(blackTable);
 
@@ -124,7 +126,7 @@ export default async function handler(req, res) {
     const greenTable = await fetchTable(GREEN_URL);
     const greenData = parseBinData(greenTable, "Ness");
 
-    // Select which area’s black bins
+    // Build events
     let events = [];
     if (area === "north") {
       events = [
@@ -143,8 +145,7 @@ export default async function handler(req, res) {
     }
 
     if (debug === "1") {
-      // Debug mode → see parsed events
-      return res.status(200).json(events);
+      return res.json(events);
     }
 
     if (events.length === 0) {
