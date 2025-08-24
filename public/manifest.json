@@ -2,7 +2,7 @@
   "name": "Ness Bin App",
   "short_name": "Ness Bin",
   "start_url": "/",
-  "display": "standalone",
+  "display": "browser",
   "background_color": "#f7f7f7",
   "theme_color": "#067f0b",
   "icons": [
