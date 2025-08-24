@@ -21,18 +21,28 @@ export default function Home() {
 
   return (
     <>
-      <Head>
-        <title>
-          {lang === "en"
-            ? "Ness Bin Collection Dates"
-            : "Cinn-latha Cruinneachadh Bhionaichean Nis"}
-        </title>
-        <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-        />
-        <link rel="stylesheet" href="/style.css" />
-      </Head>
+    
+<Head>
+  <title>
+    {lang === "en"
+      ? "Ness Bin Collection Dates"
+      : "Cinn-latha Cruinneachadh Bhionaichean Nis"}
+  </title>
+  <meta
+    name="description"
+    content={
+      lang === "en"
+        ? "Check bin collection dates for Ness: black, blue, and green bins. Includes iCal download links."
+        : "Thoir sùil air cinn-latha cruinneachaidh bhionaichean ann an Nis: dubh, gorm, is uaine. A’ gabhail a-steach ceanglaichean iCal."
+    }
+  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+  />
+  <link rel="stylesheet" href="/style.css" />
+</Head>
 
       <div className="container">
         {/* Language toggle button */}
