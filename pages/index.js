@@ -2,7 +2,7 @@ import Head from "next/head";
 import { useState, useEffect } from "react";
 
 export default function Home() {
-  const [lang, setLang] = useState("en");
+  const [lang, setLang] = useState("gd"); // Gaelic default
 
   // Load saved language preference on mount
   useEffect(() => {
@@ -14,7 +14,7 @@ export default function Home() {
 
   // Toggle language and save to localStorage
   const toggleLang = () => {
-    const newLang = lang === "en" ? "gd" : "en";
+    const newLang = lang === "gd" ? "en" : "gd";
     setLang(newLang);
     localStorage.setItem("lang", newLang);
   };
@@ -49,7 +49,7 @@ export default function Home() {
             cursor: "pointer",
           }}
         >
-          {lang === "en" ? "Gàidhlig" : "English"}
+          {lang === "gd" ? "English" : "Gàidhlig"}
         </button>
 
         {lang === "en" ? (
