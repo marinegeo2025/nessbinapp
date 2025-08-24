@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { useState, useEffect } from "react";
-import translations from "../lib/translations";  // import translations
+import translations from "../lib/translations";   // in index.js
 
 export default function Home() {
   const [lang, setLang] = useState("gd"); // Gaelic default
