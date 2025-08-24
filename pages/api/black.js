@@ -61,7 +61,7 @@ export default async function handler(req, res) {
       <body class="black-page">
         <div class="container">
           <h1><i class="fas fa-trash-alt"></i> ${t.blackTitle}</h1>
-          <h2>${t.blackNessAreas}</h2>
+          <h2>${t.blackNess}</h2>
           ${
             Object.keys(nessData).length
               ? Object.entries(nessData)
@@ -83,7 +83,7 @@ export default async function handler(req, res) {
         </div>
 
         <div class="container">
-          <h2>${t.blackSouthAreas}</h2>
+          <h2>${t.blackSouth}</h2>
           ${
             Object.keys(galsonData).length
               ? Object.entries(galsonData)
@@ -107,6 +107,6 @@ export default async function handler(req, res) {
       </html>
     `);
   } catch (err) {
-    res.status(500).send(`<p>${t.error}: ${err.message}</p>`);
+    res.status(500).send(`<p>${t.errorFetching} ${err.message}</p>`);
   }
 }
