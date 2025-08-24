@@ -70,7 +70,7 @@ export default function Home() {
     <a
       href={`/api/black?lang=${lang}`}
       target="_blank"
-      className="bin-link btn-black"
+      className="bin-link bin-button btn-black"
     >
       <i className="fas fa-dumpster icon"></i>{" "}
       {lang === "en"
@@ -82,7 +82,7 @@ export default function Home() {
     <a
       href={`/api/blue?lang=${lang}`}
       target="_blank"
-      className="bin-link btn-blue"
+      className="bin-link bin-button btn-blue"
     >
       <i className="fas fa-recycle icon"></i>{" "}
       {lang === "en"
@@ -94,7 +94,7 @@ export default function Home() {
     <a
       href={`/api/green?lang=${lang}`}
       target="_blank"
-      className="bin-link btn-green"
+      className="bin-link bin-button btn-green"
     >
       <i className="fas fa-wine-bottle icon"></i>{" "}
       {lang === "en" ? "Green Bin (Glass)" : "Biona Uaine (Glainne)"}
