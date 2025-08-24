@@ -174,19 +174,17 @@ body.green-page h1 {
 /* Header row with centered title and right button */
 .header-row {
   display: flex;
-  justify-content: center;  /* centers the title */
-  align-items: center;
-  position: relative;       /* so button can be positioned */
+  justify-content: space-between; /* keeps title on left, button on right */
+  align-items: flex-end;          /* align items by their bottom edge */
   margin-bottom: 20px;
 }
 
-/* Bigger centered title */
 .header-row h1 {
-  margin: 0 auto;
-  font-size: 32px;   /* bigger than before */
+  margin: 0;
+  font-size: 32px;
   font-weight: 700;
   color: #067f0b;
-  text-align: center;
+  text-align: left;
 }
 
 /* Floating button on right */
