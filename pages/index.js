@@ -97,15 +97,14 @@ export default function Home() {
   </a>
 </div>
 
-        <p className="credit">
-          {t.credit}
-          <br />
-          <br />
-          <span dangerouslySetInnerHTML={{ __html: t.licence }} />
-        </p>
+<div
+  className="credit"
+  dangerouslySetInnerHTML={{ __html: `${t.credit}<br /><br />${t.licence}` }}
+/>
 
-        <p className="cute-text">{t.cute}</p>
-      </div>
-    </>
-  );
+<p className="cute-text">{t.cute}</p>
+</div>
+</>
+);
 }
+
