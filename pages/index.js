@@ -77,19 +77,25 @@ export default function Home() {
           </li>
         </ul>
 
-        <div style={{ marginTop: "20px" }}>
-          <h3>{t.calendarHeader}</h3>
-          <a href="/api/calendar/north" className="bin-link north-bin-link">
-            <i className="fas fa-download icon"></i> {t.northSchedule}
-            <br />
-            <span className="subtext">{t.northVillages}</span>
-          </a>
-          <a href="/api/calendar/south" className="bin-link south-bin-link">
-            <i className="fas fa-download icon"></i> {t.southSchedule}
-            <br />
-            <span className="subtext">{t.southVillages}</span>
-          </a>
-        </div>
+       <div style={{ marginTop: "20px" }}>
+  <h3>{t.calendarHeader}</h3>
+  <a
+    href={`/api/calendar/north?lang=${lang}`}
+    className="bin-link north-bin-link"
+  >
+    <i className="fas fa-download icon"></i> {t.northSchedule}
+    <br />
+    <span className="subtext">{t.northVillages}</span>
+  </a>
+  <a
+    href={`/api/calendar/south?lang=${lang}`}
+    className="bin-link south-bin-link"
+  >
+    <i className="fas fa-download icon"></i> {t.southSchedule}
+    <br />
+    <span className="subtext">{t.southVillages}</span>
+  </a>
+</div>
 
         <p className="credit">
           {t.credit}
