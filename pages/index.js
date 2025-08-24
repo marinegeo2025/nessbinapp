@@ -101,7 +101,7 @@ export default function Home() {
           {t.credit}
           <br />
           <br />
-          {t.licence}
+          <span dangerouslySetInnerHTML={{ __html: t.licence }} />
         </p>
 
         <p className="cute-text">{t.cute}</p>
