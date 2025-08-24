@@ -174,17 +174,22 @@ body.green-page h1 {
 /* Header row with centered title and right button */
 .header-row {
   display: flex;
-  justify-content: space-between; /* keeps title on left, button on right */
-  align-items: flex-end;          /* align items by their bottom edge */
+  justify-content: flex-start;  /* keep items together */
+  align-items: flex-end;        /* align bottoms */
+  gap: 12px;                    /* space between title and button */
   margin-bottom: 20px;
 }
 
-.header-row h1 {
-  margin: 0;
-  font-size: 32px;
-  font-weight: 700;
-  color: #067f0b;
-  text-align: left;
+.lang-toggle {
+  padding: 6px 14px;            /* slightly smaller so it balances with title */
+  border-radius: 6px;
+  border: none;
+  background: #067f0b;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 14px;
+  box-shadow: 0px 2px 5px rgba(0,0,0,0.2); /* subtle "switch" feel */
 }
 
 /* Floating button on right */
