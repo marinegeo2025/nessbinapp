@@ -1,9 +1,11 @@
-// pages/api/black.js
 import axios from "axios";
 import * as cheerio from "cheerio";
+import translations from "../../lib/translations";
 
 export default async function handler(req, res) {
-  const lang = req.query.lang || "gd"; // check query
+  const lang = req.query.lang === "en" ? "en" : "gd"; // default Gaelic
+  const t = translations[lang];
+
   const url =
     "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/non-recyclable-waste-grey-bin-purple-sticker/thursday-collections";
 
@@ -17,7 +19,7 @@ export default async function handler(req, res) {
     const table = $("table").first();
 
     if (!table.length) {
-      return res.status(404).send("<p>No bin collection data found.</p>");
+      return res.status(404).send(`<p>${t.noData}</p>`);
     }
 
     const headers = [];
@@ -46,34 +48,20 @@ export default async function handler(req, res) {
       }
     });
 
-    // Switch headings based on language
-    const title =
-      lang === "en"
-        ? "BLACK Bin Collection Dates"
-        : "Cinn-latha Cruinneachadh Biona Dubh";
-    const nessHeading =
-      lang === "en"
-        ? "Ness – Knockaird, Fivepenny, Butt, Eoropie, Port of Ness, Lionel, Eorodale, Adabrock, Cross Skigersta"
-        : "Nis – Cnoc Àrd, Còig Peighinnean, Rubha, Eòropaidh, Port Nis, Lìonal, Eòradal, Adabroc, Cros Sgiogarstaidh";
-    const galsonHeading =
-      lang === "en"
-        ? "Habost, Swainbost, Cross, North & South Dell"
-        : "Tobson, Suaineabost, Cros, Dail bho Thuath is Deas";
-
     res.setHeader("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
       <html lang="${lang}">
       <head>
         <meta charset="UTF-8">
-        <title>${title}</title>
+        <title>${t.blackTitle}</title>
         <link rel="stylesheet" href="/style.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
       </head>
       <body class="black-page">
         <div class="container">
-          <h1><i class="fas fa-trash-alt"></i> ${title}</h1>
-          <h2>${nessHeading}</h2>
+          <h1><i class="fas fa-trash-alt"></i> ${t.blackTitle}</h1>
+          <h2>${t.blackNessAreas}</h2>
           ${
             Object.keys(nessData).length
               ? Object.entries(nessData)
@@ -90,14 +78,12 @@ export default async function handler(req, res) {
                 </ul>`
                   )
                   .join("")
-              : lang === "en"
-              ? "<p>No collection dates available for Ness.</p>"
-              : "<p>Chan eil cinn-latha cruinneachaidh ri fhaighinn airson Nis.</p>"
+              : `<p>${t.noData}</p>`
           }
         </div>
 
         <div class="container">
-          <h2>${galsonHeading}</h2>
+          <h2>${t.blackSouthAreas}</h2>
           ${
             Object.keys(galsonData).length
               ? Object.entries(galsonData)
@@ -114,15 +100,13 @@ export default async function handler(req, res) {
                 </ul>`
                   )
                   .join("")
-              : lang === "en"
-              ? "<p>No collection dates available for Galson.</p>"
-              : "<p>Chan eil cinn-latha cruinneachaidh ri fhaighinn airson Ghabhsann.</p>"
+              : `<p>${t.noData}</p>`
           }
         </div>
       </body>
       </html>
     `);
   } catch (err) {
-    res.status(500).send(`<p>Error fetching data: ${err.message}</p>`);
+    res.status(500).send(`<p>${t.error}: ${err.message}</p>`);
   }
 }
