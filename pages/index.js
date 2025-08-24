@@ -40,7 +40,7 @@ export default function Home() {
             <i className="fas fa-trash"></i> {t.title}
           </h1>
           <button onClick={toggleLang} className="lang-toggle">
-            {lang === "gd" ? "English" : "Gàidhlig"}
+            {lang === "gd" ? "Gàidhlig" : "English"}
           </button>
         </div>
 
