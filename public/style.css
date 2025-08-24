@@ -171,4 +171,35 @@ body.green-page h1 {
   font-size: 20px;       /* scale icons down a touch */
   margin-right: 8px;
 }
+/* Header row with centered title and right button */
+.header-row {
+  display: flex;
+  justify-content: center;  /* centers the title */
+  align-items: center;
+  position: relative;       /* so button can be positioned */
+  margin-bottom: 20px;
+}
+
+/* Bigger centered title */
+.header-row h1 {
+  margin: 0 auto;
+  font-size: 32px;   /* bigger than before */
+  font-weight: 700;
+  color: #067f0b;
+  text-align: center;
+}
+
+/* Floating button on right */
+.lang-toggle {
+  position: absolute;
+  right: 0;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  background: #067f0b;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 14px;
+}
 
