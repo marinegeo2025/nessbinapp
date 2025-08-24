@@ -1,5 +1,6 @@
 import Head from "next/head";
 import { useState, useEffect } from "react";
+import translations from "../lib/translations";  // import translations
 
 export default function Home() {
   const [lang, setLang] = useState("gd"); // Gaelic default
@@ -7,9 +8,7 @@ export default function Home() {
   // Load saved language preference on mount
   useEffect(() => {
     const saved = localStorage.getItem("lang");
-    if (saved) {
-      setLang(saved);
-    }
+    if (saved) setLang(saved);
   }, []);
 
   // Toggle language and save to localStorage
@@ -19,239 +18,87 @@ export default function Home() {
     localStorage.setItem("lang", newLang);
   };
 
+  const t = translations[lang]; // shorthand
+
   return (
     <>
-    
-<Head>
-      <title>
-        {lang === "en"
-          ? "Ness Bin Collection Dates"
-          : "Cinn-latha Cruinneachadh Bhionaichean Nis"}
-      </title>
-      <meta
-        name="description"
-        content={
-          lang === "en"
-            ? "Check bin collection dates for Ness: black, blue, and green bins. Includes iCal download links."
-            : "Thoir sùil air cinn-latha cruinneachaidh bhionaichean ann an Nis: dubh, gorm, is uaine. A’ gabhail a-steach ceanglaichean iCal."
-        }
-      />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-      />
-      <link rel="stylesheet" href="/style.css" />
-    </Head>
+      <Head>
+        <title>{t.title}</title>
+        <meta name="description" content={t.description} />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        />
+        <link rel="stylesheet" href="/style.css" />
+      </Head>
 
-    <div className="container">
-      {/* Header row with centered title + language toggle button */}
-      <div className="header-row">
-        <h1>
-          <i className="fas fa-trash"></i>{" "}
-          {lang === "en"
-            ? "Ness Bin Collection Dates"
-            : "Cinn-latha Cruinneachadh Bhionaichean Nis"}
-        </h1>
-        <button onClick={toggleLang} className="lang-toggle">
-          {lang === "gd" ? "English" : "Gàidhlig"}
-        </button>
-      </div>
+      <div className="container">
+        {/* Header row with centered title + language toggle button */}
+        <div className="header-row">
+          <h1>
+            <i className="fas fa-trash"></i> {t.title}
+          </h1>
+          <button onClick={toggleLang} className="lang-toggle">
+            {lang === "gd" ? "English" : "Gàidhlig"}
+          </button>
+        </div>
 
-      {lang === "en" ? (
-        <>
-          <p className="villages">
-            Clicking the black, blue, and green buttons below will display the
-            CNES collection schedules for: Lionel, Habost, Swainbost, Cross,
-            North Dell, South Dell, Fivepenny, Butt, Cross Skigersta, Skigersta,
-            Eorodale, Adabrock, Port of Ness, Knockaird, and Eoropie.
-          </p>
-          <p>Select the bin type to view the latest collection dates:</p>
-          
-          <ul className="bin-list">
-              
-  <li>
-    <a
-      href={`/api/black?lang=${lang}`}
-      target="_blank"
-      className="bin-link bin-button btn-black"
-    >
-      <i className="fas fa-dumpster icon"></i>{" "}
-      {lang === "en"
-        ? "Black Bin (General Waste)"
-        : "Biona Dubh (Sgudal Coitcheann)"}
-    </a>
-  </li>
-  <li>
-    <a
-      href={`/api/blue?lang=${lang}`}
-      target="_blank"
-      className="bin-link bin-button btn-blue"
-    >
-      <i className="fas fa-recycle icon"></i>{" "}
-      {lang === "en"
-        ? "Blue Bin (Plastics and Paper)"
-        : "Biona Gorm (Plastaig is Pàipear)"}
-    </a>
-  </li>
-  <li>
-    <a
-      href={`/api/green?lang=${lang}`}
-      target="_blank"
-      className="bin-link bin-button btn-green"
-    >
-      <i className="fas fa-wine-bottle icon"></i>{" "}
-      {lang === "en"
-        ? "Green Bin (Glass)"
-        : "Biona Uaine (Glainne)"}
-    </a>
-  </li>
-</ul>
+        <p className="villages">{t.villages}</p>
+        <p>{t.selectBin}</p>
 
-            <div style={{ marginTop: "20px" }}>
-              <h3>📅 Open the Ness Bin Collection Schedules in Your Calendar:</h3>
-              <a href="/api/calendar/north" className="bin-link north-bin-link">
-                <i className="fas fa-download icon"></i> North Ness Bin Schedule
-                <br />
-                <span className="subtext">
-                  (Knockaird, Fivepenny, Butt, Eoropie, Port of Ness, Lionel,
-                  Eorodale, Adabrock, Cross Skigersta)
-                </span>
-              </a>
-              <a href="/api/calendar/south" className="bin-link south-bin-link">
-                <i className="fas fa-download icon"></i> South Ness Bin Schedule
-                <br />
-                <span className="subtext">
-                  (Habost, Swainbost, Cross, North and South Dell)
-                </span>
-              </a>
-            </div>
+        <ul className="bin-list">
+          <li>
+            <a
+              href={`/api/black?lang=${lang}`}
+              target="_blank"
+              className="bin-link bin-button btn-black"
+            >
+              <i className="fas fa-dumpster icon"></i> {t.blackButton}
+            </a>
+          </li>
+          <li>
+            <a
+              href={`/api/blue?lang=${lang}`}
+              target="_blank"
+              className="bin-link bin-button btn-blue"
+            >
+              <i className="fas fa-recycle icon"></i> {t.blueButton}
+            </a>
+          </li>
+          <li>
+            <a
+              href={`/api/green?lang=${lang}`}
+              target="_blank"
+              className="bin-link bin-button btn-green"
+            >
+              <i className="fas fa-wine-bottle icon"></i> {t.greenButton}
+            </a>
+          </li>
+        </ul>
 
-            <p className="credit">
-              Created by Alex Barnard using Github and Vercel. Each time this app
-              loads, it scrapes data from the CNES website, meaning that it is up
-              to date at the time the app is opened. The data used are from{" "}
-              <a
-                href="https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris"
-                target="_blank"
-              >
-                CNES Bins and Recycling
-              </a>
-              .
-              <br />
-              <br />
-              This free tool is shared under a{" "}
-              <a
-                href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
-                target="_blank"
-              >
-                Creative Commons Attribution-NonCommercial-ShareAlike 4.0
-                International
-              </a>{" "}
-              licence.
-            </p>
+        <div style={{ marginTop: "20px" }}>
+          <h3>{t.calendarHeader}</h3>
+          <a href="/api/calendar/north" className="bin-link north-bin-link">
+            <i className="fas fa-download icon"></i> {t.northSchedule}
+            <br />
+            <span className="subtext">{t.northVillages}</span>
+          </a>
+          <a href="/api/calendar/south" className="bin-link south-bin-link">
+            <i className="fas fa-download icon"></i> {t.southSchedule}
+            <br />
+            <span className="subtext">{t.southVillages}</span>
+          </a>
+        </div>
 
-            <p className="cute-text">
-              <span className="heart">💚</span> WE LOVE NESS!{" "}
-              <span className="heart">💚</span>
-            </p>
-          </>
-        ) : (
-          <>
-            <h1>
-              <i className="fas fa-trash"></i> Cinn-latha Cruinneachadh
-              Bhionaichean Nis
-            </h1>
-            <p className="villages">
-              Le bhith a’ briogadh air na putanan dubh, gorm is uaine gu h-ìosal,
-              seallaidh e clàran cruinneachaidh Chomhairle nan Eilean Siar airson:
-              Lìonal, Tobson, Suaineabost, Cros, Dail bho Thuath, Dail bhon Deas,
-              Còig Peighinnean, Rubha, Cros Sgiogarstaidh, Sgiogarstaidh, Eòradal,
-              Adabroc, Port Nis, Cnoc Àrd, agus Eòropaidh.
-            </p>
-            <p>Tagh seòrsa a’ bhiona gus na cinn-latha as ùire fhaicinn:</p>
+        <p className="credit">
+          {t.credit}
+          <br />
+          <br />
+          {t.licence}
+        </p>
 
-            <ul className="bin-list">
-              <li>
-                <a
-                  href="/api/black"
-                  target="_blank"
-                  className="bin-link btn-black"
-                >
-                  <i className="fas fa-dumpster icon"></i> Biona Dubh (Sgudal Coitcheann)
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/api/blue"
-                  target="_blank"
-                  className="bin-link btn-blue"
-                >
-                  <i className="fas fa-recycle icon"></i> Biona Gorm (Plastaig is
-                  Pàipear)
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/api/green"
-                  target="_blank"
-                  className="bin-link btn-green"
-                >
-                  <i className="fas fa-wine-bottle icon"></i> Biona Uaine (Glainne)
-                </a>
-              </li>
-            </ul>
-
-            <div style={{ marginTop: "20px" }}>
-              <h3>📅 Fosgail na Clàran Bhionaichean Nis anns a’ Mhìosachan agad:</h3>
-              <a href="/api/calendar/north" className="bin-link north-bin-link">
-                <i className="fas fa-download icon"></i> Clàr Bhionaichean Nis a Tuath
-                <br />
-                <span className="subtext">
-                  (Cnoc Àrd, Còig Peighinnean, Rubha, Eòropaidh, Port Nis, Lìonal,
-                  Eòradal, Adabroc, Cros Sgiogarstaidh)
-                </span>
-              </a>
-              <a href="/api/calendar/south" className="bin-link south-bin-link">
-                <i className="fas fa-download icon"></i> Clàr Bhionaichean Nis a Deas
-                <br />
-                <span className="subtext">
-                  (Tobson, Suaineabost, Cros, Dail bho Thuath is Deas)
-                </span>
-              </a>
-            </div>
-
-            <p className="credit">
-              Air a chruthachadh le Alex Barnard a’ cleachdadh Github agus Vercel.
-              Gach turas a luchdaicheas an aplacaid seo, bidh e a’ sgrìobadh dàta
-              bhon làrach-lìn ChNES, agus mar sin tha e suas gu latha nuair a thèid
-              fhosgladh. Tha an dàta seo bho{" "}
-              <a
-                href="https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris"
-                target="_blank"
-              >
-                CNES Bionaichean is Ath-chuairteachadh
-              </a>
-              .
-              <br />
-              <br />
-              Tha an inneal an-asgaidh seo air a roinn fo{" "}
-              <a
-                href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
-                target="_blank"
-              >
-                Ceadachas Creative Commons Attribution-NonCommercial-ShareAlike
-                4.0 International
-              </a>
-              .
-            </p>
-
-            <p className="cute-text">
-              <span className="heart">💚</span> GRÀDH MÒR AIR NIS!{" "}
-              <span className="heart">💚</span>
-            </p>
-          </>
-        )}
+        <p className="cute-text">{t.cute}</p>
       </div>
     </>
   );
