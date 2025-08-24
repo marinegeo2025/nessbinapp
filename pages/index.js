@@ -41,8 +41,15 @@ export default function Home() {
         {/* Header row with centered title + language toggle button */}
         <div className="header-row">
           <h1>
-            <i className="fas fa-trash"></i> {t.title}
-          </h1>
+  <i className="fas fa-trash"></i>{" "}
+  {lang === "en" ? (
+    <>
+      {t.titleLine1} <br /> {t.titleLine2}
+    </>
+  ) : (
+    t.title
+  )}
+</h1>
           <button onClick={toggleLang} className="lang-toggle">
             {lang === "gd" ? "Gàidhlig" : "English"}
           </button>
