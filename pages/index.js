@@ -57,7 +57,6 @@ export default function Home() {
           <li>
             <a
               href={`/api/black?lang=${lang}`}
-              target="_blank"
               className="bin-link bin-button btn-black"
             >
               <i className="fas fa-dumpster icon"></i> {t.blackButton}
@@ -66,7 +65,6 @@ export default function Home() {
           <li>
             <a
               href={`/api/blue?lang=${lang}`}
-              target="_blank"
               className="bin-link bin-button btn-blue"
             >
               <i className="fas fa-recycle icon"></i> {t.blueButton}
@@ -75,7 +73,6 @@ export default function Home() {
           <li>
             <a
               href={`/api/green?lang=${lang}`}
-              target="_blank"
               className="bin-link bin-button btn-green"
             >
               <i className="fas fa-wine-bottle icon"></i> {t.greenButton}
