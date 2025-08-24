@@ -31,6 +31,12 @@ export default function Home() {
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         />
         <link rel="stylesheet" href="/style.css" />
+        <link rel="manifest" href="/manifest.json" />
+<link rel="apple-touch-icon" href="/icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="theme-color" content="#067f0b" />
+   
       </Head>
 
       <div className="container">
