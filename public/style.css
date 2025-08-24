@@ -174,10 +174,17 @@ body.green-page h1 {
 /* Header row with centered title and right button */
 .header-row {
   display: flex;
-  justify-content: flex-start;  /* keep items together */
-  align-items: flex-end;        /* align bottoms */
-  gap: 12px;                    /* space between title and button */
+  justify-content: space-between; /* spread title left, button right */
+  align-items: center;
   margin-bottom: 20px;
+}
+
+.header-row h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #067f0b;
+  text-align: left;   /* align left */
 }
 
 .lang-toggle {
