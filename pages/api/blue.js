@@ -3,6 +3,7 @@ import axios from "axios";
 import * as cheerio from "cheerio";
 
 export default async function handler(req, res) {
+  const lang = req.query.lang || "en"; // "en" by default
   const url =
     "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/organic-food-and-garden-waste-and-mixed-recycling-blue-bin/wednesday-collections";
 
@@ -16,7 +17,13 @@ export default async function handler(req, res) {
     const table = $("table").first();
 
     if (!table.length) {
-      return res.status(404).send("<p>No blue bin collection data found.</p>");
+      return res
+        .status(404)
+        .send(
+          lang === "en"
+            ? "<p>No blue bin collection data found.</p>"
+            : "<p>Cha deach dàta cruinneachaidh biona gorm a lorg.</p>"
+        );
     }
 
     const headers = [];
@@ -40,20 +47,29 @@ export default async function handler(req, res) {
       }
     });
 
+    // Switch UI text based on language
+    const pageTitle =
+      lang === "en"
+        ? "BLUE Bin Collection Dates for Ness"
+        : "Cinn-latha Cruinneachaidh Biona Gorm airson Nis";
+    const noDataMsg =
+      lang === "en"
+        ? "No bin collection dates found. Try refreshing later."
+        : "Chan eil cinn-latha cruinneachaidh rim faighinn. Feuch ri ùrachadh nas fhaide air adhart.";
+
     res.setHeader("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
-      <html lang="en">
+      <html lang="${lang}">
       <head>
         <meta charset="UTF-8">
-        <title>BLUE Bin Collection Dates for Ness</title>
+        <title>${pageTitle}</title>
         <link rel="stylesheet" href="/style.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
       </head>
-      <body>
       <body class="blue-page">
         <div class="container">
-          <h1><i class="fas fa-recycle"></i> BLUE Bin Collection Dates for Ness</h1>
+          <h1><i class="fas fa-recycle"></i> ${pageTitle}</h1>
           ${
             Object.keys(collectionData).length
               ? Object.entries(collectionData)
@@ -70,13 +86,19 @@ export default async function handler(req, res) {
               </ul>`
                   )
                   .join("")
-              : "<p>No bin collection dates found. Try refreshing later.</p>"
+              : `<p>${noDataMsg}</p>`
           }
         </div>
       </body>
       </html>
     `);
   } catch (err) {
-    res.status(500).send(`<p>Error fetching data: ${err.message}</p>`);
+    res
+      .status(500)
+      .send(
+        lang === "en"
+          ? `<p>Error fetching data: ${err.message}</p>`
+          : `<p>Mearachd a’ faighinn dàta: ${err.message}</p>`
+      );
   }
 }
