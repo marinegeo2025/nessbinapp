@@ -3,7 +3,7 @@ import axios from "axios";
 import * as cheerio from "cheerio";
 
 export default async function handler(req, res) {
-  const lang = req.query.lang || "en"; // "en" by default
+  const lang = req.query.lang || "gd"; // "gd" by default
   const url =
     "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/glass-green-bin-collections/friday-collections";
 
