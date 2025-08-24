@@ -2,7 +2,7 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
 import { createEvents } from "ics";
-import translations from "../../../lib/translations"; // ✅ use shared translations
+import translations from "../../../lib/translations"; // shared translations
 
 const BLACK_URL =
   "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/non-recyclable-waste-grey-bin-purple-sticker/thursday-collections";
@@ -33,7 +33,10 @@ function parseBinTable($, keyword) {
           const month = headers[i];
           const dates = $(cells[i]).text().trim();
           if (dates && dates.toLowerCase() !== "n/a") {
-            const parts = dates.split(",").map((x) => cleanDate(x)).filter(Boolean);
+            const parts = dates
+              .split(",")
+              .map((x) => cleanDate(x))
+              .filter(Boolean);
             data[month] = (data[month] || []).concat(parts);
           }
         }
@@ -59,7 +62,10 @@ function parseBlackBins($) {
         const month = headers[i];
         const dates = $(cells[i]).text().trim();
         if (dates && dates.toLowerCase() !== "n/a") {
-          const parts = dates.split(",").map((x) => cleanDate(x)).filter(Boolean);
+          const parts = dates
+            .split(",")
+            .map((x) => cleanDate(x))
+            .filter(Boolean);
           if (area.includes("Ness")) {
             ness[month] = (ness[month] || []).concat(parts);
           } else if (area.includes("Galson")) {
@@ -82,7 +88,7 @@ function buildEvents(binType, t, areaName, data) {
       const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
       if (isNaN(monthIndex)) continue;
       events.push({
-        title: `${t[binType + "Button"]} – ${areaName}`, // ✅ translation
+        title: `${t[`${binType}Button`]} – ${areaName}`, // translation-aware
         start: [year, monthIndex + 1, day],
       });
     }
@@ -92,40 +98,48 @@ function buildEvents(binType, t, areaName, data) {
 
 export default async function handler(req, res) {
   const { area } = req.query;
-  const lang = req.query.lang === "en" ? "en" : "gd"; // default Gaelic
+  const lang = req.query.lang === "en" ? "en" : "gd"; // ✅ Gaelic default
   const t = translations[lang];
 
   try {
     // Scrape black bins
-    const blackResp = await axios.get(BLACK_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
+    const blackResp = await axios.get(BLACK_URL, {
+      headers: { "User-Agent": "Mozilla/5.0" },
+    });
     const $black = cheerio.load(blackResp.data);
     const { ness, galson } = parseBlackBins($black);
 
     // Scrape blue bins
-    const blueResp = await axios.get(BLUE_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
+    const blueResp = await axios.get(BLUE_URL, {
+      headers: { "User-Agent": "Mozilla/5.0" },
+    });
     const $blue = cheerio.load(blueResp.data);
     const blueData = parseBinTable($blue, "Ness");
 
     // Scrape green bins
-    const greenResp = await axios.get(GREEN_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
+    const greenResp = await axios.get(GREEN_URL, {
+      headers: { "User-Agent": "Mozilla/5.0" },
+    });
     const $green = cheerio.load(greenResp.data);
     const greenData = parseBinTable($green, "Ness");
 
     let events = [];
     if (area === "north") {
       events = [
-        ...buildEvents("black", t, "Ness a Tuath / North Ness", ness),
-        ...buildEvents("blue", t, "Nis / Ness", blueData),
-        ...buildEvents("green", t, "Nis / Ness", greenData),
+        ...buildEvents("black", t, lang === "en" ? "North Ness" : "Nis a Tuath", ness),
+        ...buildEvents("blue", t, "Nis", blueData),
+        ...buildEvents("green", t, "Nis", greenData),
       ];
     } else if (area === "south") {
       events = [
-        ...buildEvents("black", t, "Ness a Deas / South Ness", galson),
-        ...buildEvents("blue", t, "Nis / Ness", blueData),
-        ...buildEvents("green", t, "Nis / Ness", greenData),
+        ...buildEvents("black", t, lang === "en" ? "South Ness" : "Nis a Deas", galson),
+        ...buildEvents("blue", t, "Nis", blueData),
+        ...buildEvents("green", t, "Nis", greenData),
       ];
     } else {
-      return res.status(404).send(lang === "en" ? "Area not found" : "Cha deach sgìre a lorg");
+      return res
+        .status(404)
+        .send(lang === "en" ? "Area not found" : "Cha deach sgìre a lorg");
     }
 
     if (events.length === 0) {
