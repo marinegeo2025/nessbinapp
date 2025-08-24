@@ -88,7 +88,7 @@ function buildEvents(binType, t, areaName, data) {
       const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
       if (isNaN(monthIndex)) continue;
       events.push({
-        title: `${t[`${binType}Button`]} – ${areaName}`, // translation-aware
+        title: `${t[`${binType}Button`]}`, // translation-aware
         start: [year, monthIndex + 1, day],
       });
     }
