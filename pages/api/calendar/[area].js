@@ -2,6 +2,7 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
 import { createEvents } from "ics";
+import translations from "../../../lib/translations"; // ✅ use shared translations
 
 const BLACK_URL =
   "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/non-recyclable-waste-grey-bin-purple-sticker/thursday-collections";
@@ -72,7 +73,7 @@ function parseBlackBins($) {
 }
 
 // Convert parsed data to ICS events
-function buildEvents(binColor, areaName, data) {
+function buildEvents(binType, t, areaName, data) {
   const year = new Date().getFullYear();
   const events = [];
 
@@ -81,7 +82,7 @@ function buildEvents(binColor, areaName, data) {
       const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
       if (isNaN(monthIndex)) continue;
       events.push({
-        title: `${binColor} Bin Collection (${areaName})`,
+        title: `${t[binType + "Button"]} – ${areaName}`, // ✅ translation
         start: [year, monthIndex + 1, day],
       });
     }
@@ -91,6 +92,8 @@ function buildEvents(binColor, areaName, data) {
 
 export default async function handler(req, res) {
   const { area } = req.query;
+  const lang = req.query.lang === "en" ? "en" : "gd"; // default Gaelic
+  const t = translations[lang];
 
   try {
     // Scrape black bins
@@ -111,38 +114,38 @@ export default async function handler(req, res) {
     let events = [];
     if (area === "north") {
       events = [
-        ...buildEvents("Black", "North Ness", ness),
-        ...buildEvents("Blue", "Ness", blueData),
-        ...buildEvents("Green", "Ness", greenData),
+        ...buildEvents("black", t, "Ness a Tuath / North Ness", ness),
+        ...buildEvents("blue", t, "Nis / Ness", blueData),
+        ...buildEvents("green", t, "Nis / Ness", greenData),
       ];
     } else if (area === "south") {
       events = [
-        ...buildEvents("Black", "South Ness", galson),
-        ...buildEvents("Blue", "Ness", blueData),
-        ...buildEvents("Green", "Ness", greenData),
+        ...buildEvents("black", t, "Ness a Deas / South Ness", galson),
+        ...buildEvents("blue", t, "Nis / Ness", blueData),
+        ...buildEvents("green", t, "Nis / Ness", greenData),
       ];
     } else {
-      return res.status(404).send("Area not found");
+      return res.status(404).send(lang === "en" ? "Area not found" : "Cha deach sgìre a lorg");
     }
 
     if (events.length === 0) {
-      return res.status(500).send("No events found");
+      return res.status(500).send(t.noData);
     }
 
     const { error, value } = createEvents(events);
     if (error) {
       console.error("ICS Error:", error, events);
-      return res.status(500).send("Failed to build calendar");
+      return res.status(500).send(t.errorFetching);
     }
 
     res.setHeader("Content-Type", "text/calendar; charset=utf-8");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="${area}-ness-bin-schedule.ics"`
+      `attachment; filename="${area}-ness-bin-schedule-${lang}.ics"`
     );
     res.send(value);
   } catch (err) {
     console.error("Calendar build error:", err);
-    res.status(500).send("Failed to build calendar");
+    res.status(500).send(`${t.errorFetching} ${err.message}`);
   }
 }
