@@ -187,18 +187,6 @@ body.green-page h1 {
   text-align: left;   /* align left */
 }
 
-.lang-toggle {
-  padding: 6px 14px;            /* slightly smaller so it balances with title */
-  border-radius: 6px;
-  border: none;
-  background: #067f0b;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  font-size: 14px;
-  box-shadow: 0px 2px 5px rgba(0,0,0,0.2); /* subtle "switch" feel */
-}
-
 /* Floating button on right */
 .lang-toggle {
   position: absolute;
