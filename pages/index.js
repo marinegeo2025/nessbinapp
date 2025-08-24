@@ -23,59 +23,53 @@ export default function Home() {
     <>
     
 <Head>
-  <title>
-    {lang === "en"
-      ? "Ness Bin Collection Dates"
-      : "Cinn-latha Cruinneachadh Bhionaichean Nis"}
-  </title>
-  <meta
-    name="description"
-    content={
-      lang === "en"
-        ? "Check bin collection dates for Ness: black, blue, and green bins. Includes iCal download links."
-        : "Thoir sùil air cinn-latha cruinneachaidh bhionaichean ann an Nis: dubh, gorm, is uaine. A’ gabhail a-steach ceanglaichean iCal."
-    }
-  />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-  />
-  <link rel="stylesheet" href="/style.css" />
-</Head>
+      <title>
+        {lang === "en"
+          ? "Ness Bin Collection Dates"
+          : "Cinn-latha Cruinneachadh Bhionaichean Nis"}
+      </title>
+      <meta
+        name="description"
+        content={
+          lang === "en"
+            ? "Check bin collection dates for Ness: black, blue, and green bins. Includes iCal download links."
+            : "Thoir sùil air cinn-latha cruinneachaidh bhionaichean ann an Nis: dubh, gorm, is uaine. A’ gabhail a-steach ceanglaichean iCal."
+        }
+      />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      />
+      <link rel="stylesheet" href="/style.css" />
+    </Head>
 
-      <div className="container">
-        {/* Language toggle button */}
-        <button
-          onClick={toggleLang}
-          style={{
-            marginBottom: "20px",
-            padding: "8px 16px",
-            borderRadius: "6px",
-            border: "none",
-            background: "#067f0b",
-            color: "white",
-            fontWeight: "bold",
-            cursor: "pointer",
-          }}
-        >
+    <div className="container">
+      {/* Header row with centered title + language toggle button */}
+      <div className="header-row">
+        <h1>
+          <i className="fas fa-trash"></i>{" "}
+          {lang === "en"
+            ? "Ness Bin Collection Dates"
+            : "Cinn-latha Cruinneachadh Bhionaichean Nis"}
+        </h1>
+        <button onClick={toggleLang} className="lang-toggle">
           {lang === "gd" ? "English" : "Gàidhlig"}
         </button>
+      </div>
 
-        {lang === "en" ? (
-          <>
-            <h1>
-              <i className="fas fa-trash"></i> Ness Bin Collection Dates
-            </h1>
-            <p className="villages">
-              Clicking the black, blue, and green buttons below will display the
-              CNES collection schedules for: Lionel, Habost, Swainbost, Cross,
-              North Dell, South Dell, Fivepenny, Butt, Cross Skigersta, Skigersta,
-              Eorodale, Adabrock, Port of Ness, Knockaird, and Eoropie.
-            </p>
-            <p>Select the bin type to view the latest collection dates:</p>
-
-            <ul className="bin-list">
+      {lang === "en" ? (
+        <>
+          <p className="villages">
+            Clicking the black, blue, and green buttons below will display the
+            CNES collection schedules for: Lionel, Habost, Swainbost, Cross,
+            North Dell, South Dell, Fivepenny, Butt, Cross Skigersta, Skigersta,
+            Eorodale, Adabrock, Port of Ness, Knockaird, and Eoropie.
+          </p>
+          <p>Select the bin type to view the latest collection dates:</p>
+          
+          <ul className="bin-list">
+              
   <li>
     <a
       href={`/api/black?lang=${lang}`}
