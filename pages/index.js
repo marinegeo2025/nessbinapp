@@ -97,7 +97,9 @@ export default function Home() {
       className="bin-link bin-button btn-green"
     >
       <i className="fas fa-wine-bottle icon"></i>{" "}
-      {lang === "en" ? "Green Bin (Glass)" : "Biona Uaine (Glainne)"}
+      {lang === "en"
+        ? "Green Bin (Glass)"
+        : "Biona Uaine (Glainne)"}
     </a>
   </li>
 </ul>
