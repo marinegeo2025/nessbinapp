@@ -14,5 +14,6 @@
     "next": "14.x",
     "react": "18.x",
     "react-dom": "18.x"
+    "@vercel/analytics": "^1.0.0"
   }
 }
