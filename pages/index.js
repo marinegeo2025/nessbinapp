@@ -66,34 +66,41 @@ export default function Home() {
             <p>Select the bin type to view the latest collection dates:</p>
 
             <ul className="bin-list">
-              <li>
-                <a
-                  href="/api/black"
-                  target="_blank"
-                  className="bin-link btn-black"
-                >
-                  <i className="fas fa-dumpster icon"></i> Black Bin (General Waste)
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/api/blue"
-                  target="_blank"
-                  className="bin-link btn-blue"
-                >
-                  <i className="fas fa-recycle icon"></i> Blue Bin (Plastics and Paper)
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/api/green"
-                  target="_blank"
-                  className="bin-link btn-green"
-                >
-                  <i className="fas fa-wine-bottle icon"></i> Green Bin (Glass)
-                </a>
-              </li>
-            </ul>
+  <li>
+    <a
+      href={`/api/black?lang=${lang}`}
+      target="_blank"
+      className="bin-link btn-black"
+    >
+      <i className="fas fa-dumpster icon"></i>{" "}
+      {lang === "en"
+        ? "Black Bin (General Waste)"
+        : "Biona Dubh (Sgudal Coitcheann)"}
+    </a>
+  </li>
+  <li>
+    <a
+      href={`/api/blue?lang=${lang}`}
+      target="_blank"
+      className="bin-link btn-blue"
+    >
+      <i className="fas fa-recycle icon"></i>{" "}
+      {lang === "en"
+        ? "Blue Bin (Plastics and Paper)"
+        : "Biona Gorm (Plastaig is Pàipear)"}
+    </a>
+  </li>
+  <li>
+    <a
+      href={`/api/green?lang=${lang}`}
+      target="_blank"
+      className="bin-link btn-green"
+    >
+      <i className="fas fa-wine-bottle icon"></i>{" "}
+      {lang === "en" ? "Green Bin (Glass)" : "Biona Uaine (Glainne)"}
+    </a>
+  </li>
+</ul>
 
             <div style={{ marginTop: "20px" }}>
               <h3>📅 Open the Ness Bin Collection Schedules in Your Calendar:</h3>
