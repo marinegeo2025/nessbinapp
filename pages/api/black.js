@@ -70,13 +70,14 @@ export default async function handler(req, res) {
                     ([month, dates]) => `
                 <h3>${month}</h3>
                 <ul>
-                  ${dates
-                    .map(
-                      (d) =>
-                        `<li><i class="fas fa-calendar-day"></i> ${d}</li>`
-                    )
-                    .join("")}
-                </ul>`
+  ${dates
+    .map((d) => d.trim()) // clean up extra whitespace
+    .map(
+      (d) =>
+        `<li><i class="fas fa-calendar-day"></i> ${d}</li>`
+    )
+    .join("")}
+</ul>
                   )
                   .join("")
               : `<p>${t.noData}</p>`
