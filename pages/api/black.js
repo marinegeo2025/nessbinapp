@@ -36,13 +36,13 @@ export default async function handler(req, res) {
           for (let i = 1; i < cells.length; i++) {
             const month = headers[i];
             const dates = $(cells[i]).text().trim();
-            nessData[month] = dates.split(", ").filter(Boolean);
+            nessData[month] = dates.split(",").map(d => d.trim()).filter(Boolean);
           }
         } else if (area.includes("Galson")) {
           for (let i = 1; i < cells.length; i++) {
             const month = headers[i];
             const dates = $(cells[i]).text().trim();
-            galsonData[month] = dates.split(", ").filter(Boolean);
+            galsonData[month] = dates.split(",").map(d => d.trim()).filter(Boolean);
           }
         }
       }
