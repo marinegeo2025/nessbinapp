@@ -36,7 +36,10 @@ export default async function handler(req, res) {
             const month = headers[i];
             const dates = $(cells[i]).text().trim();
             if (dates && dates.toLowerCase() !== "n/a") {
-              collectionData[month] = dates.split(", ").filter(Boolean);
+              collectionData[month] = dates
+                .split(",")       // split properly
+                .map(d => d.trim())
+                .filter(Boolean);
             }
           }
         }
