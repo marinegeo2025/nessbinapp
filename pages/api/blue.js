@@ -1,10 +1,10 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
 import translations from "../../lib/translations";
-import { validateBinTable } from "../../lib/failsafe"; // use relaxed failsafe
+import { validateBinTable } from "../../lib/failsafe";
 
 export default async function handler(req, res) {
-  const lang = req.query.lang === "en" ? "en" : "gd"; // Gaelic default
+  const lang = req.query.lang === "en" ? "en" : "gd";
   const t = translations[lang];
 
   const url =
@@ -18,45 +18,47 @@ export default async function handler(req, res) {
 
     const $ = cheerio.load(response.data);
 
-    // 🚨 run relaxed failsafe
+    // 🚨 relaxed failsafe
     try {
       validateBinTable($, { requiredKeyword: "Ness" });
     } catch (err) {
       return res.status(500).send(`
         <p>⚠️ The CNES website structure has changed.<br/>
         Please contact 
-        <a href="mailto:al@daisyscoldwatersurfteam.com">al@daisyscoldwatersurfteam.com</a> 
-        so Ness Bin App can be updated.</p>
+        <a href="mailto:al@daisyscoldwatersurfteam.com">al@daisyscoldwatersurfteam.com</a>.
+      </p>
       `);
     }
 
-    // ✅ Parse Ness block manually
     const collectionData = {};
+    let insideNess = false;
 
-    // Find the "Week X - Ness" block
-    $("tbody tr, div").each((i, el) => {
-      const areaText = $(el).text().trim();
-      if (/week\s*\d+\s*-\s*ness/i.test(areaText)) {
-        // Once we find the Ness section, look ahead for month/date rows
-        const parent = $(el).parent();
-        parent.find("td, div").each((j, cell) => {
-          const text = $(cell).text().trim();
-          if (!text) return;
+    $("table tr").each((i, row) => {
+      const cells = $(row).find("td").map((j, td) => $(td).text().trim()).get();
 
-          // Detect month names
-          const monthMatch = text.match(/^(January|February|March|April|May|June|July|August|September|October|November|December)/i);
-          if (monthMatch) {
-            const month = monthMatch[0];
-            // Dates will be after the month name
-            const dates = text.replace(month, "").trim();
-            if (dates) {
-              collectionData[month] = dates
-                .split(",")
-                .map((d) => d.trim())
-                .filter(Boolean);
-            }
-          }
-        });
+      if (cells.length === 0) return;
+
+      // Detect Ness row
+      if (/ness/i.test(cells[0]) || /ness/i.test(cells.join(" "))) {
+        insideNess = true;
+        return; // skip this row, just marker
+      }
+
+      // If we're in Ness section, look for Month -> Dates rows
+      if (insideNess && cells.length >= 2) {
+        const month = cells[0];
+        const dates = cells[1];
+        if (/^(January|February|March|April|May|June|July|August|September|October|November|December)$/i.test(month)) {
+          collectionData[month] = dates
+            .split(",")
+            .map((d) => d.trim())
+            .filter(Boolean);
+        }
+      }
+
+      // If we hit another Week block, stop Ness parsing
+      if (insideNess && /week/i.test(cells[0]) && !/ness/i.test(cells[0])) {
+        insideNess = false;
       }
     });
 
