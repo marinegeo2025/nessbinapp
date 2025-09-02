@@ -18,47 +18,31 @@ export default async function handler(req, res) {
 
     const $ = cheerio.load(response.data);
 
-    // 🚨 relaxed failsafe
-    try {
-      validateBinTable($, { requiredKeyword: "Ness" });
-    } catch (err) {
-      return res.status(500).send(`
-        <p>⚠️ The CNES website structure has changed.<br/>
-        Please contact 
-        <a href="mailto:al@daisyscoldwatersurfteam.com">al@daisyscoldwatersurfteam.com</a>.
-      </p>
-      `);
-    }
+    // 🚨 failsafe
+    validateBinTable($, { requiredKeyword: "Ness" });
+
+    const headers = [];
+    $("table thead th").each((i, th) => headers.push($(th).text().trim()));
 
     const collectionData = {};
-    let insideNess = false;
 
-    $("table tr").each((i, row) => {
+    $("table tbody tr").each((i, row) => {
       const cells = $(row).find("td").map((j, td) => $(td).text().trim()).get();
-
       if (cells.length === 0) return;
 
-      // Detect Ness row
-      if (/ness/i.test(cells[0]) || /ness/i.test(cells.join(" "))) {
-        insideNess = true;
-        return; // skip this row, just marker
-      }
-
-      // If we're in Ness section, look for Month -> Dates rows
-      if (insideNess && cells.length >= 2) {
-        const month = cells[0];
-        const dates = cells[1];
-        if (/^(January|February|March|April|May|June|July|August|September|October|November|December)$/i.test(month)) {
-          collectionData[month] = dates
-            .split(",")
-            .map((d) => d.trim())
-            .filter(Boolean);
+      const area = cells[0];
+      if (/ness/i.test(area)) {
+        // This row is Ness – map months to dates
+        for (let i = 1; i < cells.length; i++) {
+          const month = headers[i];       // August, September, October
+          const dates = cells[i];
+          if (month && dates && dates.toLowerCase() !== "n/a") {
+            collectionData[month] = dates
+              .split(",")
+              .map((d) => d.trim())
+              .filter(Boolean);
+          }
         }
-      }
-
-      // If we hit another Week block, stop Ness parsing
-      if (insideNess && /week/i.test(cells[0]) && !/ness/i.test(cells[0])) {
-        insideNess = false;
       }
     });
 
@@ -83,9 +67,7 @@ export default async function handler(req, res) {
                     ([month, dates]) => `
               <h2>${month}</h2>
               <ul>
-                ${dates
-                  .map((d) => `<li><i class="fas fa-calendar-day"></i> ${d}</li>`)
-                  .join("")}
+                ${dates.map((d) => `<li><i class="fas fa-calendar-day"></i> ${d}</li>`).join("")}
               </ul>`
                   )
                   .join("")
