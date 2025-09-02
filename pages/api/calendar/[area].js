@@ -3,6 +3,7 @@ import axios from "axios";
 import * as cheerio from "cheerio";
 import { createEvents } from "ics";
 import translations from "../../../lib/translations"; // shared translations
+import { validateBinTable } from "../../../lib/failsafe"; // <-- add failsafe util
 
 const BLACK_URL =
   "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/non-recyclable-waste-grey-bin-purple-sticker/thursday-collections";
@@ -98,31 +99,37 @@ function buildEvents(binType, t, areaName, data) {
 
 export default async function handler(req, res) {
   const { area } = req.query;
-  const lang = req.query.lang === "en" ? "en" : "gd"; // ✅ Gaelic default
+  const lang = req.query.lang === "en" ? "en" : "gd"; // Gaelic default
   const t = translations[lang];
 
   try {
-    // Scrape black bins
-    const blackResp = await axios.get(BLACK_URL, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-    });
+    // --- Black bins ---
+    const blackResp = await axios.get(BLACK_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
     const $black = cheerio.load(blackResp.data);
+    try {
+      validateBinTable($black, { expectedMonths: ["January"], requiredKeyword: "Ness" });
+    } catch (err) {
+      return res.status(500).send(`
+        ⚠️ CNES website structure changed.<br/>
+        Please contact 
+        <a href="mailto:al@daisyscoldwatersurfteam.com">al@daisyscoldwatersurfteam.com</a>.
+      `);
+    }
     const { ness, galson } = parseBlackBins($black);
 
-    // Scrape blue bins
-    const blueResp = await axios.get(BLUE_URL, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-    });
+    // --- Blue bins ---
+    const blueResp = await axios.get(BLUE_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
     const $blue = cheerio.load(blueResp.data);
+    validateBinTable($blue, { expectedMonths: ["January"], requiredKeyword: "Ness" });
     const blueData = parseBinTable($blue, "Ness");
 
-    // Scrape green bins
-    const greenResp = await axios.get(GREEN_URL, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-    });
+    // --- Green bins ---
+    const greenResp = await axios.get(GREEN_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
     const $green = cheerio.load(greenResp.data);
+    validateBinTable($green, { expectedMonths: ["January"], requiredKeyword: "Ness" });
     const greenData = parseBinTable($green, "Ness");
 
+    // Build events
     let events = [];
     if (area === "north") {
       events = [
@@ -137,9 +144,7 @@ export default async function handler(req, res) {
         ...buildEvents("green", t, "Nis", greenData),
       ];
     } else {
-      return res
-        .status(404)
-        .send(lang === "en" ? "Area not found" : "Cha deach sgìre a lorg");
+      return res.status(404).send(lang === "en" ? "Area not found" : "Cha deach sgìre a lorg");
     }
 
     if (events.length === 0) {
