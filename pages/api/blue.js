@@ -1,38 +1,7 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
 import translations from "../../lib/translations";
-
-// --- failsafe check ---
-function validateBinTable($, { expectedMonths = [], requiredKeyword = "Ness" }) {
-  const table = $("table").first();
-  if (!table.length) {
-    throw new Error("No table found on CNES page");
-  }
-
-  const headers = [];
-  table.find("thead th").each((i, th) => headers.push($(th).text().trim()));
-
-  // must include at least one expected month
-  const missingMonths = expectedMonths.filter(
-    (m) => !headers.some((h) => h.toLowerCase().includes(m.toLowerCase()))
-  );
-  if (missingMonths.length > 0) {
-    throw new Error(`Table headers missing months: ${missingMonths.join(", ")}`);
-  }
-
-  // must include a row with "Ness"
-  let foundKeyword = false;
-  table.find("tbody tr").each((i, row) => {
-    const area = $(row).find("td").first().text().trim();
-    if (area.includes(requiredKeyword)) {
-      foundKeyword = true;
-    }
-  });
-  if (!foundKeyword) {
-    throw new Error(`No row containing "${requiredKeyword}" found`);
-  }
-}
-// ----------------------
+import { validateBinTable } from "../../lib/failsafe"; // use relaxed failsafe
 
 export default async function handler(req, res) {
   const lang = req.query.lang === "en" ? "en" : "gd"; // Gaelic default
@@ -49,39 +18,45 @@ export default async function handler(req, res) {
 
     const $ = cheerio.load(response.data);
 
-    // 🚨 run failsafe before parsing
+    // 🚨 run relaxed failsafe
     try {
-      validateBinTable($, { expectedMonths: ["January", "February"], requiredKeyword: "Ness" });
+      validateBinTable($, { requiredKeyword: "Ness" });
     } catch (err) {
       return res.status(500).send(`
         <p>⚠️ The CNES website structure has changed.<br/>
-        Please contact the developer at 
+        Please contact 
         <a href="mailto:al@daisyscoldwatersurfteam.com">al@daisyscoldwatersurfteam.com</a> 
         so Ness Bin App can be updated.</p>
       `);
     }
 
-    // ✅ Parsing only happens if structure check passed
-    const headers = [];
-    $("thead th").each((i, th) => headers.push($(th).text().trim()));
-
+    // ✅ Parse Ness block manually
     const collectionData = {};
-    $("tbody tr").each((i, row) => {
-      const cells = $(row).find("td");
-      if (cells.length >= 2) {
-        const area = $(cells[0]).text().trim();
-        if (area.includes("Ness")) {
-          for (let i = 1; i < cells.length; i++) {
-            const month = headers[i];
-            const dates = $(cells[i]).text().trim();
-            if (dates && dates.toLowerCase() !== "n/a") {
+
+    // Find the "Week X - Ness" block
+    $("tbody tr, div").each((i, el) => {
+      const areaText = $(el).text().trim();
+      if (/week\s*\d+\s*-\s*ness/i.test(areaText)) {
+        // Once we find the Ness section, look ahead for month/date rows
+        const parent = $(el).parent();
+        parent.find("td, div").each((j, cell) => {
+          const text = $(cell).text().trim();
+          if (!text) return;
+
+          // Detect month names
+          const monthMatch = text.match(/^(January|February|March|April|May|June|July|August|September|October|November|December)/i);
+          if (monthMatch) {
+            const month = monthMatch[0];
+            // Dates will be after the month name
+            const dates = text.replace(month, "").trim();
+            if (dates) {
               collectionData[month] = dates
                 .split(",")
                 .map((d) => d.trim())
                 .filter(Boolean);
             }
           }
-        }
+        });
       }
     });
 
