@@ -1,6 +1,7 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
 import translations from "../../lib/translations";
+import { validateBinTable } from "../../lib/failsafe"; // <-- add failsafe util
 
 export default async function handler(req, res) {
   const lang = req.query.lang === "en" ? "en" : "gd"; // default Gaelic
@@ -16,12 +17,20 @@ export default async function handler(req, res) {
     });
 
     const $ = cheerio.load(response.data);
-    const table = $("table").first();
 
-    if (!table.length) {
-      return res.status(404).send(`<p>${t.noData}</p>`);
+    // 🚨 run failsafe before parsing
+    try {
+      validateBinTable($, { expectedMonths: ["January", "February"], requiredKeyword: "Ness" });
+    } catch (err) {
+      return res.status(500).send(`
+        <p>⚠️ The CNES website structure has changed.<br/>
+        Please contact 
+        <a href="mailto:al@daisyscoldwatersurfteam.com">al@daisyscoldwatersurfteam.com</a> 
+        so Ness Bin App can be updated.</p>
+      `);
     }
 
+    const table = $("table").first();
     const headers = [];
     table.find("thead th").each((i, th) => headers.push($(th).text().trim()));
 
@@ -70,14 +79,13 @@ export default async function handler(req, res) {
                     ([month, dates]) => `
                 <h3>${month}</h3>
                 <ul>
-  ${dates
-    .map((d) => d.trim()) // clean up extra whitespace
-    .map((d) => `<li><i class="fas fa-calendar-day"></i> ${d}</li>`)
-    .join("")}
-  </ul>
- `
-)
-.join("")
+                  ${dates
+                    .map((d) => `<li><i class="fas fa-calendar-day"></i> ${d}</li>`)
+                    .join("")}
+                </ul>
+              `
+                  )
+                  .join("")
               : `<p>${t.noData}</p>`
           }
         </div>
@@ -88,16 +96,15 @@ export default async function handler(req, res) {
             Object.keys(galsonData).length
               ? Object.entries(galsonData)
                   .map(
-  ([month, dates]) => `
+                    ([month, dates]) => `
     <h3>${month}</h3>
     <ul>
       ${dates
-        .map((d) => d.trim()) // clean up extra whitespace
         .map((d) => `<li><i class="fas fa-calendar-day"></i> ${d}</li>`)
         .join("")}
     </ul>
   `
-)
+                  )
                   .join("")
               : `<p>${t.noData}</p>`
           }
