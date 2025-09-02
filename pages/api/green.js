@@ -1,6 +1,7 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
 import translations from "../../lib/translations";
+import { validateBinTable } from "../../lib/failsafe"; // <-- add failsafe util
 
 export default async function handler(req, res) {
   const lang = req.query.lang === "en" ? "en" : "gd"; // Gaelic default
@@ -16,18 +17,25 @@ export default async function handler(req, res) {
     });
 
     const $ = cheerio.load(response.data);
-    const table = $("table").first();
 
-    if (!table.length) {
-      return res.status(404).send(`<p>${t.noData}</p>`);
+    // 🚨 run failsafe before parsing
+    try {
+      validateBinTable($, { expectedMonths: ["January", "February"], requiredKeyword: "Ness" });
+    } catch (err) {
+      return res.status(500).send(`
+        <p>⚠️ The CNES website structure has changed.<br/>
+        Please contact 
+        <a href="mailto:al@daisyscoldwatersurfteam.com">al@daisyscoldwatersurfteam.com</a> 
+        so Ness Bin App can be updated.</p>
+      `);
     }
 
     const headers = [];
-    table.find("thead th").each((i, th) => headers.push($(th).text().trim()));
+    $("thead th").each((i, th) => headers.push($(th).text().trim()));
 
     const collectionData = {};
 
-    table.find("tbody tr").each((i, row) => {
+    $("tbody tr").each((i, row) => {
       const cells = $(row).find("td");
       if (cells.length >= 2) {
         const area = $(cells[0]).text().trim();
@@ -37,8 +45,8 @@ export default async function handler(req, res) {
             const dates = $(cells[i]).text().trim();
             if (dates && dates.toLowerCase() !== "n/a") {
               collectionData[month] = dates
-                .split(",")       // split properly
-                .map(d => d.trim())
+                .split(",")
+                .map((d) => d.trim())
                 .filter(Boolean);
             }
           }
@@ -68,10 +76,7 @@ export default async function handler(req, res) {
               <h2>${month}</h2>
               <ul>
                 ${dates
-                  .map(
-                    (d) =>
-                      `<li><i class="fas fa-calendar-day"></i> ${d}</li>`
-                  )
+                  .map((d) => `<li><i class="fas fa-calendar-day"></i> ${d}</li>`)
                   .join("")}
               </ul>`
                   )
@@ -83,6 +88,6 @@ export default async function handler(req, res) {
       </html>
     `);
   } catch (err) {
-    res.status(500).send(`<p>${t.error}: ${err.message}</p>`);
+    res.status(500).send(`<p>${t.errorFetching} ${err.message}</p>`);
   }
 }
