@@ -2,8 +2,8 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
 import { createEvents } from "ics";
-import translations from "../../../lib/translations"; // shared translations
-import { validateBinTable } from "../../../lib/failsafe"; // <-- add failsafe util
+import translations from "../../../lib/translations";
+import { validateBinTable } from "../../../lib/failsafe";
 
 const BLACK_URL =
   "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/non-recyclable-waste-grey-bin-purple-sticker/thursday-collections";
@@ -19,7 +19,7 @@ function cleanDate(d) {
   return match ? parseInt(match[1], 10) : null;
 }
 
-// Parse a bin table into { month: [dates...] }
+// Parse a bin table into { month: [dates...] } – used for Green
 function parseBinTable($, keyword) {
   const headers = [];
   $("thead th").each((i, th) => headers.push($(th).text().trim()));
@@ -47,7 +47,7 @@ function parseBinTable($, keyword) {
   return data;
 }
 
-// Parse black bin separately (Ness vs Galson)
+// Parse Black bins separately (Ness vs Galson)
 function parseBlackBins($) {
   const headers = [];
   $("thead th").each((i, th) => headers.push($(th).text().trim()));
@@ -67,9 +67,9 @@ function parseBlackBins($) {
             .split(",")
             .map((x) => cleanDate(x))
             .filter(Boolean);
-          if (area.includes("Ness")) {
+          if (/ness/i.test(area)) {
             ness[month] = (ness[month] || []).concat(parts);
-          } else if (area.includes("Galson")) {
+          } else if (/galson/i.test(area)) {
             galson[month] = (galson[month] || []).concat(parts);
           }
         }
@@ -77,6 +77,35 @@ function parseBlackBins($) {
     }
   });
   return { ness, galson };
+}
+
+// ✅ Parse Blue bins – headers = months, rows = weeks
+function parseBlueBins($) {
+  const headers = [];
+  $("table thead th").each((i, th) => headers.push($(th).text().trim()));
+
+  const nessData = {};
+
+  $("table tbody tr").each((i, row) => {
+    const cells = $(row).find("td").map((j, td) => $(td).text().trim()).get();
+    if (cells.length === 0) return;
+
+    const area = cells[0];
+    if (/ness/i.test(area)) {
+      for (let i = 1; i < cells.length; i++) {
+        const month = headers[i];
+        const dates = cells[i];
+        if (month && dates && dates.toLowerCase() !== "n/a") {
+          nessData[month] = dates
+            .split(",")
+            .map((d) => cleanDate(d))
+            .filter(Boolean);
+        }
+      }
+    }
+  });
+
+  return nessData;
 }
 
 // Convert parsed data to ICS events
@@ -89,7 +118,7 @@ function buildEvents(binType, t, areaName, data) {
       const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
       if (isNaN(monthIndex)) continue;
       events.push({
-        title: `${t[`${binType}Button`]}`, // translation-aware
+        title: `${t[`${binType}Button`]}`,
         start: [year, monthIndex + 1, day],
       });
     }
@@ -99,34 +128,26 @@ function buildEvents(binType, t, areaName, data) {
 
 export default async function handler(req, res) {
   const { area } = req.query;
-  const lang = req.query.lang === "en" ? "en" : "gd"; // Gaelic default
+  const lang = req.query.lang === "en" ? "en" : "gd";
   const t = translations[lang];
 
   try {
     // --- Black bins ---
     const blackResp = await axios.get(BLACK_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
     const $black = cheerio.load(blackResp.data);
-    try {
-      validateBinTable($black, { expectedMonths: ["January"], requiredKeyword: "Ness" });
-    } catch (err) {
-      return res.status(500).send(`
-        ⚠️ CNES website structure changed.<br/>
-        Please contact 
-        <a href="mailto:al@daisyscoldwatersurfteam.com">al@daisyscoldwatersurfteam.com</a>.
-      `);
-    }
+    validateBinTable($black, { requiredKeyword: "Ness" });
     const { ness, galson } = parseBlackBins($black);
 
     // --- Blue bins ---
     const blueResp = await axios.get(BLUE_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
     const $blue = cheerio.load(blueResp.data);
-    validateBinTable($blue, { expectedMonths: ["January"], requiredKeyword: "Ness" });
-    const blueData = parseBinTable($blue, "Ness");
+    validateBinTable($blue, { requiredKeyword: "Ness" });
+    const blueData = parseBlueBins($blue);
 
     // --- Green bins ---
     const greenResp = await axios.get(GREEN_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
     const $green = cheerio.load(greenResp.data);
-    validateBinTable($green, { expectedMonths: ["January"], requiredKeyword: "Ness" });
+    validateBinTable($green, { requiredKeyword: "Ness" });
     const greenData = parseBinTable($green, "Ness");
 
     // Build events
