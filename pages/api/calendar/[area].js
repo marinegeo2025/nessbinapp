@@ -116,30 +116,32 @@ export default async function handler(req, res) {
 
   try {
     // --- Black bins ---
-    const blackResp = await axios.get(BLACK_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
-    const $black = cheerio.load(blackResp.data);
-    try {
-      validateBinTable($black, { expectedMonths: [], requiredKeyword: "Ness" });
-    } catch (err) {
-      return res.status(500).send(`
-        ⚠️ CNES website structure changed.<br/>
-        Please contact 
-        <a href="mailto:al@daisyscoldwatersurfteam.com">al@daisyscoldwatersurfteam.com</a>.
-      `);
-    }
-    const { ness, galson } = parseBlackBins($black);
+const blackResp = await axios.get(BLACK_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
+const $black = cheerio.load(blackResp.data);
+try {
+  // Require BOTH rows to exist for safety
+  validateBinTable($black, { expectedMonths: [], requiredKeyword: "Ness" });
+  validateBinTable($black, { expectedMonths: [], requiredKeyword: "Galson" });
+} catch (err) {
+  return res.status(500).send(`
+    ⚠️ CNES website structure changed.<br/>
+    Please contact 
+    <a href="mailto:al@daisyscoldwatersurfteam.com">al@daisyscoldwatersurfteam.com</a>.
+  `);
+}
+const { ness, galson } = parseBlackBins($black);
 
-    // --- Blue bins ---
-    const blueResp = await axios.get(BLUE_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
-    const $blue = cheerio.load(blueResp.data);
-    validateBinTable($blue,  { expectedMonths: [], requiredKeyword: "Ness" });
-    const blueData = parseBinTable($blue, "Ness");
+// --- Blue bins ---
+const blueResp = await axios.get(BLUE_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
+const $blue = cheerio.load(blueResp.data);
+validateBinTable($blue, { expectedMonths: [], requiredKeyword: "Ness" });
+const blueData = parseBinTable($blue, "Ness");
 
-    // --- Green bins ---
-    const greenResp = await axios.get(GREEN_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
-    const $green = cheerio.load(greenResp.data);
-    validateBinTable($green, { expectedMonths: [], requiredKeyword: "Ness" });
-    const greenData = parseBinTable($green, "Ness");
+// --- Green bins ---
+const greenResp = await axios.get(GREEN_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
+const $green = cheerio.load(greenResp.data);
+validateBinTable($green, { expectedMonths: [], requiredKeyword: "Ness" });
+const greenData = parseBinTable($green, "Ness");
 
     // Build events
     let events = [];
