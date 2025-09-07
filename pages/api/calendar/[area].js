@@ -119,7 +119,7 @@ export default async function handler(req, res) {
     const blackResp = await axios.get(BLACK_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
     const $black = cheerio.load(blackResp.data);
     try {
-      validateBinTable($black, { requiredKeyword: "Ness" });
+      validateBinTable($black, { expectedMonths: [], requiredKeyword: "Ness" });
     } catch (err) {
       return res.status(500).send(`
         ⚠️ CNES website structure changed.<br/>
@@ -132,13 +132,13 @@ export default async function handler(req, res) {
     // --- Blue bins ---
     const blueResp = await axios.get(BLUE_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
     const $blue = cheerio.load(blueResp.data);
-    validateBinTable($blue, { requiredKeyword: "Ness" });
+    validateBinTable($blue,  { expectedMonths: [], requiredKeyword: "Ness" });
     const blueData = parseBinTable($blue, "Ness");
 
     // --- Green bins ---
     const greenResp = await axios.get(GREEN_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
     const $green = cheerio.load(greenResp.data);
-    validateBinTable($green, { requiredKeyword: "Ness" });
+    validateBinTable($green, { expectedMonths: [], requiredKeyword: "Ness" });
     const greenData = parseBinTable($green, "Ness");
 
     // Build events
