@@ -20,7 +20,7 @@ export default async function handler(req, res) {
 
     // 🚨 run shared failsafe before parsing
     try {
-      validateBinTable($, { requiredKeyword: "Ness" });
+      validateBinTable($, { expectedMonths: [], requiredKeyword: "Ness" });
     } catch (err) {
       return res.status(500).send(`
         <p>⚠️ The CNES website structure has changed.<br/>
