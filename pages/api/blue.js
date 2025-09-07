@@ -4,7 +4,7 @@ import translations from "../../lib/translations";
 import { validateBinTable } from "../../lib/failsafe";
 
 export default async function handler(req, res) {
-  const lang = req.query.lang === "en" ? "en" : "gd";
+  const lang = req.query.lang === "en" ? "en" : "gd"; // Gaelic default
   const t = translations[lang];
 
   const url =
@@ -18,29 +18,42 @@ export default async function handler(req, res) {
 
     const $ = cheerio.load(response.data);
 
-    // 🚨 failsafe
-    validateBinTable($, { requiredKeyword: "Ness" });
+    // 🚨 run shared failsafe before parsing
+    try {
+      validateBinTable($, { requiredKeyword: "Ness" });
+    } catch (err) {
+      return res.status(500).send(`
+        <p>⚠️ The CNES website structure has changed.<br/>
+        Please contact the developer at 
+        <a href="mailto:al@daisyscoldwatersurfteam.com">al@daisyscoldwatersurfteam.com</a> 
+        so Ness Bin App can be updated.</p>
+      `);
+    }
 
+    // Collect headers (with fallback)
     const headers = [];
-    $("table thead th").each((i, th) => headers.push($(th).text().trim()));
+    $("thead th").each((i, th) => headers.push($(th).text().trim()));
+    if (headers.length === 0) {
+      $("tr").first().find("th,td").each((i, cell) => headers.push($(cell).text().trim()));
+    }
 
     const collectionData = {};
+    const rows = $("tbody tr").length ? $("tbody tr") : $("tr").slice(1);
 
-    $("table tbody tr").each((i, row) => {
-      const cells = $(row).find("td").map((j, td) => $(td).text().trim()).get();
-      if (cells.length === 0) return;
-
-      const area = cells[0];
-      if (/ness/i.test(area)) {
-        // This row is Ness – map months to dates
-        for (let i = 1; i < cells.length; i++) {
-          const month = headers[i];       // August, September, October
-          const dates = cells[i];
-          if (month && dates && dates.toLowerCase() !== "n/a") {
-            collectionData[month] = dates
-              .split(",")
-              .map((d) => d.trim())
-              .filter(Boolean);
+    rows.each((_, row) => {
+      const cells = $(row).find("th,td");
+      if (cells.length >= 2) {
+        const area = $(cells[0]).text().trim();
+        if (area.toLowerCase().includes("ness")) {
+          for (let i = 1; i < cells.length; i++) {
+            const month = headers[i];
+            const dates = $(cells[i]).text().trim();
+            if (month && dates && dates.toLowerCase() !== "n/a") {
+              collectionData[month] = dates
+                .split(",")
+                .map((d) => d.trim())
+                .filter(Boolean);
+            }
           }
         }
       }
@@ -67,7 +80,9 @@ export default async function handler(req, res) {
                     ([month, dates]) => `
               <h2>${month}</h2>
               <ul>
-                ${dates.map((d) => `<li><i class="fas fa-calendar-day"></i> ${d}</li>`).join("")}
+                ${dates
+                  .map((d) => `<li><i class="fas fa-calendar-day"></i> ${d}</li>`)
+                  .join("")}
               </ul>`
                   )
                   .join("")
