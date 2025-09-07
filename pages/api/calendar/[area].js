@@ -120,6 +120,7 @@ export default async function handler(req, res) {
     const $black = cheerio.load(blackResp.data);
     try {
       validateBinTable($black, { expectedMonths: [], requiredKeyword: "Ness" });
+      validateBinTable($black, { expectedMonths: [], requiredKeyword: "Galson" });
     } catch (err) {
       return res.status(500).send(`
         ⚠️ CNES website structure changed.<br/>
