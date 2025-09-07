@@ -19,26 +19,32 @@ function cleanDate(d) {
   return match ? parseInt(match[1], 10) : null;
 }
 
-// Parse a bin table into { month: [dates...] } – used for Green
+// Parse a bin table into { month: [dates...] } for a given keyword row (e.g., "Ness")
 function parseBinTable($, keyword) {
   const headers = [];
   $("thead th").each((i, th) => headers.push($(th).text().trim()));
+  if (headers.length === 0) {
+    $("tr").first().find("th,td").each((i, cell) => headers.push($(cell).text().trim()));
+  }
 
   const data = {};
-  $("tbody tr").each((i, row) => {
-    const cells = $(row).find("td");
+  const rows = $("tbody tr").length ? $("tbody tr") : $("tr").slice(1);
+  rows.each((_, row) => {
+    const cells = $(row).find("th,td");
     if (cells.length >= 2) {
       const area = $(cells[0]).text().trim();
-      if (area.includes(keyword)) {
+      if (area.toLowerCase().includes(keyword.toLowerCase())) {
         for (let i = 1; i < cells.length; i++) {
           const month = headers[i];
           const dates = $(cells[i]).text().trim();
-          if (dates && dates.toLowerCase() !== "n/a") {
+          if (month && dates && dates.toLowerCase() !== "n/a") {
             const parts = dates
               .split(",")
               .map((x) => cleanDate(x))
               .filter(Boolean);
-            data[month] = (data[month] || []).concat(parts);
+            if (parts.length) {
+              data[month] = (data[month] || []).concat(parts);
+            }
           }
         }
       }
@@ -47,65 +53,42 @@ function parseBinTable($, keyword) {
   return data;
 }
 
-// Parse Black bins separately (Ness vs Galson)
+// Parse black bins separately (Ness vs Galson)
 function parseBlackBins($) {
   const headers = [];
   $("thead th").each((i, th) => headers.push($(th).text().trim()));
+  if (headers.length === 0) {
+    $("tr").first().find("th,td").each((i, cell) => headers.push($(cell).text().trim()));
+  }
 
   const ness = {};
   const galson = {};
 
-  $("tbody tr").each((i, row) => {
-    const cells = $(row).find("td");
+  const rows = $("tbody tr").length ? $("tbody tr") : $("tr").slice(1);
+  rows.each((_, row) => {
+    const cells = $(row).find("th,td");
     if (cells.length >= 2) {
       const area = $(cells[0]).text().trim();
       for (let i = 1; i < cells.length; i++) {
         const month = headers[i];
         const dates = $(cells[i]).text().trim();
-        if (dates && dates.toLowerCase() !== "n/a") {
+        if (month && dates && dates.toLowerCase() !== "n/a") {
           const parts = dates
             .split(",")
             .map((x) => cleanDate(x))
             .filter(Boolean);
-          if (/ness/i.test(area)) {
-            ness[month] = (ness[month] || []).concat(parts);
-          } else if (/galson/i.test(area)) {
-            galson[month] = (galson[month] || []).concat(parts);
+          if (parts.length) {
+            if (area.includes("Ness")) {
+              ness[month] = (ness[month] || []).concat(parts);
+            } else if (area.includes("Galson")) {
+              galson[month] = (galson[month] || []).concat(parts);
+            }
           }
         }
       }
     }
   });
   return { ness, galson };
-}
-
-// ✅ Parse Blue bins – headers = months, rows = weeks
-function parseBlueBins($) {
-  const headers = [];
-  $("table thead th").each((i, th) => headers.push($(th).text().trim()));
-
-  const nessData = {};
-
-  $("table tbody tr").each((i, row) => {
-    const cells = $(row).find("td").map((j, td) => $(td).text().trim()).get();
-    if (cells.length === 0) return;
-
-    const area = cells[0];
-    if (/ness/i.test(area)) {
-      for (let i = 1; i < cells.length; i++) {
-        const month = headers[i];
-        const dates = cells[i];
-        if (month && dates && dates.toLowerCase() !== "n/a") {
-          nessData[month] = dates
-            .split(",")
-            .map((d) => cleanDate(d))
-            .filter(Boolean);
-        }
-      }
-    }
-  });
-
-  return nessData;
 }
 
 // Convert parsed data to ICS events
@@ -128,21 +111,29 @@ function buildEvents(binType, t, areaName, data) {
 
 export default async function handler(req, res) {
   const { area } = req.query;
-  const lang = req.query.lang === "en" ? "en" : "gd";
+  const lang = req.query.lang === "en" ? "en" : "gd"; // Gaelic default
   const t = translations[lang];
 
   try {
     // --- Black bins ---
     const blackResp = await axios.get(BLACK_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
     const $black = cheerio.load(blackResp.data);
-    validateBinTable($black, { requiredKeyword: "Ness" });
+    try {
+      validateBinTable($black, { requiredKeyword: "Ness" });
+    } catch (err) {
+      return res.status(500).send(`
+        ⚠️ CNES website structure changed.<br/>
+        Please contact 
+        <a href="mailto:al@daisyscoldwatersurfteam.com">al@daisyscoldwatersurfteam.com</a>.
+      `);
+    }
     const { ness, galson } = parseBlackBins($black);
 
     // --- Blue bins ---
     const blueResp = await axios.get(BLUE_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
     const $blue = cheerio.load(blueResp.data);
     validateBinTable($blue, { requiredKeyword: "Ness" });
-    const blueData = parseBlueBins($blue);
+    const blueData = parseBinTable($blue, "Ness");
 
     // --- Green bins ---
     const greenResp = await axios.get(GREEN_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
