@@ -1,7 +1,7 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
 import translations from "../../lib/translations";
-import { validateBinTable } from "../../lib/failsafe"; // <-- add failsafe util
+import { validateBinTable } from "../../lib/failsafe";
 
 export default async function handler(req, res) {
   const lang = req.query.lang === "en" ? "en" : "gd"; // Gaelic default
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
 
     // 🚨 run failsafe before parsing
     try {
-      validateBinTable($, { expectedMonths: ["January", "February"], requiredKeyword: "Ness" });
+      validateBinTable($, { requiredKeyword: "Ness" });
     } catch (err) {
       return res.status(500).send(`
         <p>⚠️ The CNES website structure has changed.<br/>
@@ -30,20 +30,25 @@ export default async function handler(req, res) {
       `);
     }
 
+    // Collect headers (with fallback)
     const headers = [];
     $("thead th").each((i, th) => headers.push($(th).text().trim()));
+    if (headers.length === 0) {
+      $("tr").first().find("th,td").each((i, cell) => headers.push($(cell).text().trim()));
+    }
 
     const collectionData = {};
+    const rows = $("tbody tr").length ? $("tbody tr") : $("tr").slice(1);
 
-    $("tbody tr").each((i, row) => {
-      const cells = $(row).find("td");
+    rows.each((_, row) => {
+      const cells = $(row).find("th,td");
       if (cells.length >= 2) {
         const area = $(cells[0]).text().trim();
-        if (area.includes("Ness")) {
+        if (area.toLowerCase().includes("ness")) {
           for (let i = 1; i < cells.length; i++) {
             const month = headers[i];
             const dates = $(cells[i]).text().trim();
-            if (dates && dates.toLowerCase() !== "n/a") {
+            if (month && dates && dates.toLowerCase() !== "n/a") {
               collectionData[month] = dates
                 .split(",")
                 .map((d) => d.trim())
