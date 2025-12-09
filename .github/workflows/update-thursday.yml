@@ -3,14 +3,13 @@ name: Update Thursday Bin Schedule
 on:
   schedule:
     - cron: "0 3 * * *"   # runs daily at 3 AM UTC
-  workflow_dispatch:       # allows manual trigger
+  workflow_dispatch:
 
 jobs:
   update-thursday:
     runs-on: ubuntu-latest
-
     permissions:
-      contents: write       # allow the workflow to push updates to your repo
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -24,7 +23,7 @@ jobs:
       - name: Install Puppeteer
         run: npm install puppeteer@21
 
-      - name: Scrape CNES Thursday Collections page
+      - name: Scrape CNES Thursday Collections (JSON)
         run: |
           node - <<'EOF'
           import puppeteer from 'puppeteer';
@@ -37,51 +36,37 @@ jobs:
             try {
               const browser = await puppeteer.launch({
                 headless: true,
-                args: [
-                  '--no-sandbox',
-                  '--disable-setuid-sandbox',
-                  '--disable-gpu',
-                  '--disable-dev-shm-usage',
-                  '--single-process'
-                ]
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
               });
-
               const page = await browser.newPage();
               await page.goto(url, { waitUntil: 'networkidle2', timeout: 120000 });
 
               // click all accordion panes
               await page.evaluate(() => {
-                document.querySelectorAll('.accordion-pane__title').forEach(btn => btn.click());
+                document.querySelectorAll('.accordion-pane__title button').forEach(b => b.click());
+              });
+              await page.waitForTimeout(3000);
+
+              // extract only needed info
+              const data = await page.evaluate(() => {
+                const items = [];
+                document.querySelectorAll('.accordion-pane').forEach(section => {
+                  const area = section.querySelector('button')?.textContent?.trim() || '';
+                  const dates = Array.from(section.querySelectorAll('ol li')).map(li => li.textContent.trim());
+                  if (area && dates.length) items.push({ area, dates });
+                });
+                return items;
               });
 
-              await page.waitForTimeout(3000); // allow expansion animations
+              const result = {
+                lastUpdated: timestamp,
+                count: data.length,
+                results: data
+              };
 
-              const html = await page.evaluate(() => {
-                const container = document.querySelector('.accordion, .accordion-pane, .accordion-pane__content');
-                return container ? container.outerHTML : '<p>⚠️ Could not find collection section.</p>';
-              });
-
-              const result = `
-              <!DOCTYPE html>
-              <html lang="en">
-              <head>
-                <meta charset="UTF-8">
-                <title>Thursday Bin Data</title>
-                <meta name="last-updated" content="${timestamp}">
-                <style>
-                  body { font-family: Arial, sans-serif; padding: 10px; }
-                  footer { margin-top: 20px; font-size: 0.9em; color: #666; }
-                </style>
-              </head>
-              <body>
-                ${html}
-                <footer>Last updated automatically: ${timestamp}</footer>
-              </body>
-              </html>`;
-
-              fs.writeFileSync('thursday.html', result, 'utf8');
+              fs.writeFileSync('thursday.json', JSON.stringify(result, null, 2), 'utf8');
               await browser.close();
-              console.log('✅ Thursday schedule scraped successfully!');
+              console.log('✅ Thursday data saved to thursday.json');
             } catch (err) {
               console.error('❌ Scrape failed:', err);
               process.exit(1);
@@ -89,10 +74,10 @@ jobs:
           })();
           EOF
 
-      - name: Commit updated file
+      - name: Commit updated JSON
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add thursday.html
-          git commit -m "Auto-update Thursday bin data ($(date))" || echo "No changes to commit"
+          git add thursday.json
+          git commit -m "Auto-update Thursday bin JSON ($(date))" || echo "No changes"
           git push
