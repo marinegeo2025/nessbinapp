@@ -34,9 +34,25 @@ export default async function handler(req, res) {
       const match = fullDate.match(/^([A-Za-z]+)\s+(\d+\w*)(.*)$/);
       if (match) {
         const [, month, day, note] = match;
-        const cleanDate = `${day}${note ? " " + note.trim() : ""}`;
-        if (!monthGroups[month]) monthGroups[month] = [];
-        monthGroups[month].push(cleanDate);
+        const currentYear = new Date(json.lastUpdated).getFullYear();
+const currentMonth = new Date(json.lastUpdated).getMonth(); // 0=Jan, 11=Dec
+let year = currentYear;
+
+// 🧭 Add next-year tag for early months if scraper ran in December
+if (currentMonth === 11 && /^(January|February|March)$/i.test(month)) {
+  year = currentYear + 1;
+}
+
+// Add the date, but append the year *only once per month heading* if relevant
+const displayDate = `${day}${note ? " " + note.trim() : ""}`;
+const monthLabel =
+  currentMonth === 11 && /^(January|February|March)$/i.test(month)
+    ? `${month} ${year}`
+    : month;
+
+if (!monthGroups[monthLabel]) monthGroups[monthLabel] = [];
+monthGroups[monthLabel].push(displayDate);
+
       } else {
         if (!monthGroups["Other"]) monthGroups["Other"] = [];
         monthGroups["Other"].push(fullDate);
