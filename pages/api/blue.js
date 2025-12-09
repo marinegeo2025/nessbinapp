@@ -17,6 +17,10 @@ export default async function handler(req, res) {
     });
 
     const $ = cheerio.load(data);
+
+    // 🧠 Debug: show first part of HTML fetched from CNES
+    console.log($.html().slice(0, 2000));
+    
     const results = [];
 
     $(".accordion__pane").each((_, el) => {
