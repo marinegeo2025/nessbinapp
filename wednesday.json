@@ -1,37 +1,53 @@
 {
-  "lastUpdated": "2025-12-09T21:25:23.466Z",
-  "count": 4,
+  "lastUpdated": "2025-12-09T21:46:50.047Z",
+  "count": 6,
   "results": [
     {
-      "area": "Barvas / Brue / Arnol / Bragar / Water Board Houses",
+      "area": "South Lochs",
       "dates": [
-        "December 11th",
-        "January 3rd  (Rescheduled New Year collection)",
-        "January 22nd"
+        "December 10th",
+        "December 31st",
+        "January 21st"
       ]
     },
     {
-      "area": "North Tolsta / Gress",
+      "area": "Outer Point and Bayble",
       "dates": [
-        "December 11th",
-        "January 3rd  (Rescheduled New Year collection)",
-        "January 22nd"
+        "December 10th",
+        "December 31st",
+        "January 21st"
       ]
     },
     {
-      "area": "Point / Melbost / Parkend",
+      "area": "Ness",
       "dates": [
-        "December 18th",
-        "January 8th",
-        "January 29th"
+        "December 17th",
+        "January 7th",
+        "January 28th"
       ]
     },
     {
-      "area": "Goathill",
+      "area": "Tong",
       "dates": [
-        "December 4th",
-        "December 27th  (Rescheduled Christmas Day collection)",
-        "January 15th"
+        "December 17th",
+        "January 7th",
+        "January 28th"
+      ]
+    },
+    {
+      "area": "Harris Bays",
+      "dates": [
+        "December 3rd",
+        "December 24th",
+        "January 14th"
+      ]
+    },
+    {
+      "area": "Manor",
+      "dates": [
+        "December 3rd",
+        "December 24th",
+        "January 14th"
       ]
     }
   ]
