@@ -1,46 +1,27 @@
-// pages/api/blue.js
 import axios from "axios";
 import * as cheerio from "cheerio";
-import translations from "../../lib/translations.js";
+import translations from "../../lib/translations";
+import { validateBinTable } from "../../lib/failsafe";
 
 export default async function handler(req, res) {
-  const lang = req.query.lang === "en" ? "en" : "gd";
+  const lang = req.query.lang === "en" ? "en" : "gd"; // Gaelic default
   const t = translations[lang];
 
   const url =
-    "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/organic-food-and-garden-waste-and-mixed-recycling-blue-bin/thursday-collections";
+    "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/organic-food-and-garden-waste-and-mixed-recycling-blue-bin/wednesday-collections";
 
   try {
-    const { data } = await axios.get(url, {
+    const response = await axios.get(url, {
       headers: { "User-Agent": "Mozilla/5.0" },
       timeout: 10000,
     });
 
-    const $ = cheerio.load(data);
+    const $ = cheerio.load(response.data);
 
-    // 🧠 Debug: show first part of HTML fetched from CNES
-    console.log($.html().slice(0, 2000));
-    
-    const results = [];
-
-    $(".accordion__pane").each((_, el) => {
-      const area = $(el).find(".accordion__pane_heading").text().trim();
-      const lines = $(el)
-        .find(".accordion__pane_content .field__item")
-        .map((_, el2) => $(el2).text().trim())
-        .get();
-
-      if (area && lines.length) {
-        // Skip the intro "Bins are collected every..." text
-        const dates = lines.filter(
-          (line) => !line.toLowerCase().startsWith("bins are collected")
-        );
-        results.push({ area, dates });
-      }
-    });
-
-    // --- Failsafe: if CNES broke structure
-    if (results.length === 0) {
+    // 🚨 run shared failsafe before parsing
+    try {
+      validateBinTable($, { expectedMonths: [], requiredKeyword: "Ness" });
+    } catch (err) {
       return res.status(500).send(`
         <p>⚠️ The CNES website structure has changed.<br/>
         Please contact the developer at 
@@ -49,37 +30,62 @@ export default async function handler(req, res) {
       `);
     }
 
-    // --- Filter to the Barvas / Brue block (Ness area)
-    const nessBlock = results.find((r) =>
-      r.area.toLowerCase().includes("brue")
-    );
-
-    if (!nessBlock) {
-      return res.status(500).send(`<p>${t.noData}</p>`);
+    // Collect headers (with fallback)
+    const headers = [];
+    $("thead th").each((i, th) => headers.push($(th).text().trim()));
+    if (headers.length === 0) {
+      $("tr").first().find("th,td").each((i, cell) => headers.push($(cell).text().trim()));
     }
+
+    const collectionData = {};
+    const rows = $("tbody tr").length ? $("tbody tr") : $("tr").slice(1);
+
+    rows.each((_, row) => {
+      const cells = $(row).find("th,td");
+      if (cells.length >= 2) {
+        const area = $(cells[0]).text().trim();
+        if (area.toLowerCase().includes("ness")) {
+          for (let i = 1; i < cells.length; i++) {
+            const month = headers[i];
+            const dates = $(cells[i]).text().trim();
+            if (month && dates && dates.toLowerCase() !== "n/a") {
+              collectionData[month] = dates
+                .split(",")
+                .map((d) => d.trim())
+                .filter(Boolean);
+            }
+          }
+        }
+      }
+    });
 
     res.setHeader("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
       <html lang="${lang}">
       <head>
-        <meta charset="UTF-8" />
+        <meta charset="UTF-8">
         <title>${t.blueTitle}</title>
-        <link rel="stylesheet" href="/style.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+        <link rel="stylesheet" href="/style.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
       </head>
       <body class="blue-page">
         <div class="container">
           <h1><i class="fas fa-recycle"></i> ${t.blueTitle}</h1>
-          <h2>${nessBlock.area}</h2>
           ${
-            nessBlock.dates.length
-              ? `<ul>${nessBlock.dates
+            Object.keys(collectionData).length
+              ? Object.entries(collectionData)
                   .map(
-                    (d) => `<li><i class="fas fa-calendar-day"></i> ${d}</li>`
+                    ([month, dates]) => `
+              <h2>${month}</h2>
+              <ul>
+                ${dates
+                  .map((d) => `<li><i class="fas fa-calendar-day"></i> ${d}</li>`)
+                  .join("")}
+              </ul>`
                   )
-                  .join("")}</ul>`
+                  .join("")
               : `<p>${t.noData}</p>`
           }
         </div>
@@ -87,9 +93,6 @@ export default async function handler(req, res) {
       </html>
     `);
   } catch (err) {
-    console.error("Blue Bin scrape error:", err.message);
-    res
-      .status(500)
-      .send(`<p>${t.errorFetching} ${err.message}</p>`);
+    res.status(500).send(`<p>${t.errorFetching} ${err.message}</p>`);
   }
 }
