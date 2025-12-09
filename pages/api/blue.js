@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import * as cheerio from "cheerio";
 import translations from "../../lib/translations.js";
 
 export default async function handler(req, res) {
@@ -8,7 +7,7 @@ export default async function handler(req, res) {
   const t = translations[lang];
 
   try {
-    const filePath = path.join(process.cwd(), "thursday.html");
+    const filePath = path.join(process.cwd(), "wednesday.json");
 
     if (!fs.existsSync(filePath)) {
       return res.status(500).send(`
@@ -17,33 +16,19 @@ export default async function handler(req, res) {
       `);
     }
 
-    const html = fs.readFileSync(filePath, "utf8");
-    const $ = cheerio.load(html);
-    const results = [];
+    // 📦 Load the JSON file
+    const json = JSON.parse(fs.readFileSync(filePath, "utf8"));
 
-    $(".accordion-pane").each((_, el) => {
-      const area = $(el).find("h3 button").text().trim();
-      const dates = [];
-
-      $(el)
-        .find("ol li")
-        .each((_, li) => dates.push($(li).text().trim()));
-
-      if (area && dates.length > 0) {
-        results.push({ area, dates });
-      }
-    });
-
-    // 🟦 Focus on Ness (Barvas / Brue)
-    const nessBlock = results.find((r) =>
-      r.area.toLowerCase().includes("brue")
+    // 🟦 Find the Ness area
+    const nessBlock = json.results.find((r) =>
+      r.area.toLowerCase().includes("ness")
     );
 
     if (!nessBlock) {
-      return res.status(500).send(`<p>${t.noData}</p>`);
+      return res.status(500).send(`<p>${t.noData || "No data for Ness."}</p>`);
     }
 
-    // 🗓️ Group dates by month, and clean them up
+    // 🗓️ Group dates by month
     const monthGroups = {};
     nessBlock.dates.forEach((fullDate) => {
       const match = fullDate.match(/^([A-Za-z]+)\s+(\d+\w*)(.*)$/);
@@ -53,37 +38,17 @@ export default async function handler(req, res) {
         if (!monthGroups[month]) monthGroups[month] = [];
         monthGroups[month].push(cleanDate);
       } else {
-        // fallback for weird strings
         if (!monthGroups["Other"]) monthGroups["Other"] = [];
         monthGroups["Other"].push(fullDate);
       }
     });
 
-   // 🕓 Load actual scrape time from .lastupdated (written by GitHub Action)
-let lastUpdated;
-try {
-  const updatedPath = path.join(process.cwd(), ".lastupdated");
-  if (fs.existsSync(updatedPath)) {
-    const iso = fs.readFileSync(updatedPath, "utf8").trim();
-    const parsed = new Date(iso);
-    if (!isNaN(parsed)) {
-      lastUpdated = parsed.toLocaleString("en-GB", {
-        timeZone: "Europe/London",
-      });
-    }
-  }
-} catch (e) {
-  console.error("Couldn't read .lastupdated:", e);
-}
+    // 🕓 Use lastUpdated from JSON
+    const lastUpdated = new Date(json.lastUpdated).toLocaleString("en-GB", {
+      timeZone: "Europe/London",
+    });
 
-// fallback to current time if missing or invalid
-if (!lastUpdated) {
-  lastUpdated = new Date().toLocaleString("en-GB", {
-    timeZone: "Europe/London",
-  });
-}
-
-    // 🎨 Styled output
+    // 🎨 Render HTML
     res.setHeader("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -118,7 +83,7 @@ if (!lastUpdated) {
       </html>
     `);
   } catch (err) {
-    console.error("Blue Bin local parse error:", err);
+    console.error("Blue Bin JSON parse error:", err);
     res
       .status(500)
       .send(`<p>${t.errorFetching || "Error:"} ${err.message}</p>`);
