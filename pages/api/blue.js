@@ -1,5 +1,5 @@
-// pages/api/blue.js
-import axios from "axios";
+import fs from "fs";
+import path from "path";
 import * as cheerio from "cheerio";
 import translations from "../../lib/translations.js";
 
@@ -7,61 +7,47 @@ export default async function handler(req, res) {
   const lang = req.query.lang === "en" ? "en" : "gd";
   const t = translations[lang];
 
-  const CNES_URL =
-    "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/organic-food-and-garden-waste-and-mixed-recycling-blue-bin/thursday-collections";
-
   try {
-    // --- Use ScrapingBee to render JS and return full HTML
-    const { data } = await axios.get("https://app.scrapingbee.com/api/v1/", {
-      params: {
-        api_key: process.env.SCRAPINGBEE_KEY,
-        url: CNES_URL,
-        render_js: true,
-        wait: 3000, // wait 3s for accordions to load
-      },
-      headers: { "User-Agent": "NessBinApp/1.0" },
-      timeout: 20000,
-    });
+    const filePath = path.join(process.cwd(), "thursday.html");
 
-    const $ = cheerio.load(data);
+    if (!fs.existsSync(filePath)) {
+      return res.status(500).send(`
+        <p>⚠️ ${t.errorFetching || "Bin data not available yet."}<br/>
+        Please check back later.</p>
+      `);
+    }
+
+    const html = fs.readFileSync(filePath, "utf8");
+    const $ = cheerio.load(html);
     const results = [];
 
-    // Now that JS is rendered, accordions exist
-    $(".accordion__pane").each((_, el) => {
-      const area = $(el).find(".accordion__pane_heading").text().trim();
-      const lines = $(el)
-        .find(".accordion__pane_content .field__item")
-        .map((_, el2) => $(el2).text().trim())
-        .get();
+    $(".accordion-pane").each((_, el) => {
+      const area = $(el).find("h3 button").text().trim();
+      const dates = [];
 
-      if (area && lines.length) {
-        const dates = lines.filter(
-          (line) => !line.toLowerCase().startsWith("bins are collected")
-        );
+      $(el)
+        .find("ol li")
+        .each((_, li) => dates.push($(li).text().trim()));
+
+      if (area && dates.length > 0) {
         results.push({ area, dates });
       }
     });
 
-    if (results.length === 0) {
-      console.log("⚠️ No results found in rendered HTML — CNES may have changed layout");
-      return res.status(500).send(`
-        <p>⚠️ CNES website structure may have changed.<br/>
-        Please contact 
-        <a href="mailto:al@daisyscoldwatersurfteam.com">al@daisyscoldwatersurfteam.com</a>.
-        </p>
-      `);
-    }
-
-    // Filter for Brue / Barvas section
+    // Filter to the Ness block (Barvas/Brue)
     const nessBlock = results.find((r) =>
       r.area.toLowerCase().includes("brue")
     );
+
+    const stats = fs.statSync(filePath);
+    const lastUpdated = new Date(stats.mtime).toLocaleString("en-GB", {
+      timeZone: "Europe/London",
+    });
 
     if (!nessBlock) {
       return res.status(500).send(`<p>${t.noData}</p>`);
     }
 
-    // --- Render HTML page
     res.setHeader("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -86,14 +72,13 @@ export default async function handler(req, res) {
                   .join("")}</ul>`
               : `<p>${t.noData}</p>`
           }
+          <p class="last-updated"><i>Last updated: ${lastUpdated}</i></p>
         </div>
       </body>
       </html>
     `);
   } catch (err) {
-    console.error("Blue Bin scrape error:", err.message);
-    res
-      .status(500)
-      .send(`<p>${t.errorFetching} ${err.message}</p>`);
+    console.error("Blue Bin local parse error:", err);
+    res.status(500).send(`<p>${t.errorFetching || "Error:"} ${err.message}</p>`);
   }
 }
