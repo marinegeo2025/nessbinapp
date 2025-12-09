@@ -2,15 +2,15 @@ name: Update Thursday Bin Schedule
 
 on:
   schedule:
-    - cron: "0 3 * * *"   # every day at 3 AM UTC
-  workflow_dispatch:       # manual trigger option
+    - cron: "0 3 * * *"   # runs daily at 3 AM UTC
+  workflow_dispatch:       # allows manual trigger
 
 jobs:
   update-thursday:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
+      contents: write       # allow the workflow to push updates to your repo
 
     steps:
       - name: Checkout repository
@@ -31,6 +31,7 @@ jobs:
           import fs from 'fs';
 
           const url = 'https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/organic-food-and-garden-waste-and-mixed-recycling-blue-bin/thursday-collections';
+          const timestamp = new Date().toISOString();
 
           (async () => {
             try {
@@ -47,17 +48,20 @@ jobs:
 
               const page = await browser.newPage();
               await page.goto(url, { waitUntil: 'networkidle2', timeout: 120000 });
-              await page.waitForTimeout(10000); // allow accordions to render
 
-              // 🧩 Extract only the relevant accordion content
-              const content = await page.evaluate(() => {
-                const el = document.querySelector('.accordion-pane-group');
-                return el ? el.outerHTML : '<p>⚠️ Could not find collection section.</p>';
+              // click all accordion panes
+              await page.evaluate(() => {
+                document.querySelectorAll('.accordion-pane__title').forEach(btn => btn.click());
               });
 
-              // 🕒 Add a timestamp footer and wrap in minimal HTML
-              const timestamp = new Date().toISOString();
-              const cleanedHTML = `
+              await page.waitForTimeout(3000); // allow expansion animations
+
+              const html = await page.evaluate(() => {
+                const container = document.querySelector('.accordion, .accordion-pane, .accordion-pane__content');
+                return container ? container.outerHTML : '<p>⚠️ Could not find collection section.</p>';
+              });
+
+              const result = `
               <!DOCTYPE html>
               <html lang="en">
               <head>
@@ -70,14 +74,14 @@ jobs:
                 </style>
               </head>
               <body>
-                ${content}
+                ${html}
                 <footer>Last updated automatically: ${timestamp}</footer>
               </body>
               </html>`;
 
-              fs.writeFileSync('thursday.html', cleanedHTML.trim(), 'utf8');
+              fs.writeFileSync('thursday.html', result, 'utf8');
               await browser.close();
-              console.log('✅ Thursday schedule scraped, cleaned, and timestamped!');
+              console.log('✅ Thursday schedule scraped successfully!');
             } catch (err) {
               console.error('❌ Scrape failed:', err);
               process.exit(1);
@@ -85,10 +89,10 @@ jobs:
           })();
           EOF
 
-      - name: Commit updated files
+      - name: Commit updated file
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add thursday.html
-          git commit -m "Auto-update Thursday bin data ($(date))" || echo "No changes"
+          git commit -m "Auto-update Thursday bin data ($(date))" || echo "No changes to commit"
           git push
