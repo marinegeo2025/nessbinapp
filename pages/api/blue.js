@@ -34,17 +34,31 @@ export default async function handler(req, res) {
       }
     });
 
-    // Filter for the Ness area (Brue, Arnol, etc.)
+    // 🟦 Focus on Ness (Barvas / Brue)
     const nessBlock = results.find((r) =>
       r.area.toLowerCase().includes("brue")
     );
 
+    if (!nessBlock) {
+      return res.status(500).send(`<p>${t.noData}</p>`);
+    }
+
+    // 🗓️ Group dates by month
+    const monthGroups = {};
+    nessBlock.dates.forEach((date) => {
+      const month = date.match(/[A-Za-z]+/);
+      const key = month ? month[0] : "Other";
+      if (!monthGroups[key]) monthGroups[key] = [];
+      monthGroups[key].push(date);
+    });
+
+    // 🕓 Last updated timestamp
     const stats = fs.statSync(filePath);
     const lastUpdated = new Date(stats.mtime).toLocaleString("en-GB", {
       timeZone: "Europe/London",
     });
 
-    // ✅ Build styled output (reusing your original blue page layout)
+    // 🎨 Styled output
     res.setHeader("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -59,18 +73,20 @@ export default async function handler(req, res) {
       <body class="blue-page">
         <div class="container">
           <h1><i class="fas fa-recycle"></i> ${t.blueTitle}</h1>
-          ${
-            nessBlock
-              ? `
-              <h2>${nessBlock.area}</h2>
+          <h2>${nessBlock.area}</h2>
+          ${Object.entries(monthGroups)
+            .map(
+              ([month, dates]) => `
+              <h3>${month}</h3>
               <ul>
-                ${nessBlock.dates
-                  .map((d) => `<li><i class="fas fa-calendar-day"></i> ${d}</li>`)
+                ${dates
+                  .map(
+                    (d) => `<li><i class="fas fa-calendar-day"></i> ${d}</li>`
+                  )
                   .join("")}
-              </ul>
-              `
-              : `<p>${t.noData}</p>`
-          }
+              </ul>`
+            )
+            .join("")}
           <p class="last-updated"><i>Last updated: ${lastUpdated}</i></p>
         </div>
       </body>
