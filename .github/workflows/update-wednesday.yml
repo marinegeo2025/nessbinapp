@@ -1,4 +1,4 @@
-name: Update Thursday Bin Schedule
+name: Update Wednesday Bin Schedule
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  update-thursday:
+  update-wednesday:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -23,7 +23,7 @@ jobs:
       - name: Install Puppeteer
         run: npm install puppeteer@21
 
-      - name: Scrape CNES Thursday Collections (JSON)
+      - name: Scrape CNES Wednesday Collections (JSON)
         run: |
           node - <<'EOF'
           import puppeteer from 'puppeteer';
@@ -64,9 +64,9 @@ jobs:
                 results: data
               };
 
-              fs.writeFileSync('thursday.json', JSON.stringify(result, null, 2), 'utf8');
+              fs.writeFileSync('wednesday.json', JSON.stringify(result, null, 2), 'utf8');
               await browser.close();
-              console.log('✅ Thursday data saved to thursday.json');
+              console.log('✅ Wednesday data saved to wednesday.json');
             } catch (err) {
               console.error('❌ Scrape failed:', err);
               process.exit(1);
