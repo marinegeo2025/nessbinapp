@@ -78,6 +78,6 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add thursday.json
-          git commit -m "Auto-update Thursday bin JSON ($(date))" || echo "No changes"
+          git add wednesday.json
+          git commit -m "Auto-update Wednesday (Ness) bin JSON ($(date))" || echo "No changes"
           git push
