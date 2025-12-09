@@ -59,11 +59,25 @@ export default async function handler(req, res) {
       }
     });
 
-   // Use the GitHub Action scrape time or fallback to system time
-let lastUpdated = process.env.LAST_UPDATED;
+   // 🕓 Load actual scrape time from .lastupdated (written by GitHub Action)
+let lastUpdated;
+try {
+  const updatedPath = path.join(process.cwd(), ".lastupdated");
+  if (fs.existsSync(updatedPath)) {
+    const iso = fs.readFileSync(updatedPath, "utf8").trim();
+    const parsed = new Date(iso);
+    if (!isNaN(parsed)) {
+      lastUpdated = parsed.toLocaleString("en-GB", {
+        timeZone: "Europe/London",
+      });
+    }
+  }
+} catch (e) {
+  console.error("Couldn't read .lastupdated:", e);
+}
 
+// fallback to current time if missing or invalid
 if (!lastUpdated) {
-  // fallback: use current server time (e.g. Vercel runtime)
   lastUpdated = new Date().toLocaleString("en-GB", {
     timeZone: "Europe/London",
   });
