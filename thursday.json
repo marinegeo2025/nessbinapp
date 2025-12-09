@@ -1,0 +1,38 @@
+{
+  "lastUpdated": "2025-12-09T21:25:23.466Z",
+  "count": 4,
+  "results": [
+    {
+      "area": "Barvas / Brue / Arnol / Bragar / Water Board Houses",
+      "dates": [
+        "December 11th",
+        "January 3rd  (Rescheduled New Year collection)",
+        "January 22nd"
+      ]
+    },
+    {
+      "area": "North Tolsta / Gress",
+      "dates": [
+        "December 11th",
+        "January 3rd  (Rescheduled New Year collection)",
+        "January 22nd"
+      ]
+    },
+    {
+      "area": "Point / Melbost / Parkend",
+      "dates": [
+        "December 18th",
+        "January 8th",
+        "January 29th"
+      ]
+    },
+    {
+      "area": "Goathill",
+      "dates": [
+        "December 4th",
+        "December 27th  (Rescheduled Christmas Day collection)",
+        "January 15th"
+      ]
+    }
+  ]
+}
