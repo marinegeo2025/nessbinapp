@@ -2,7 +2,7 @@ name: Update Thursday Bin Schedule
 
 on:
   schedule:
-    - cron: "0 3 * * 4"   # every Thursday at 3 AM UTC (runs once a week)
+    - cron: "0 3 * * *"   # every Thursday at 3 AM UTC (runs once a week)
   workflow_dispatch:       # allows manual trigger
 
 jobs:
