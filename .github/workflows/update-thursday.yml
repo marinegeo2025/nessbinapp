@@ -29,7 +29,7 @@ jobs:
           import puppeteer from 'puppeteer';
           import fs from 'fs';
 
-          const url = 'https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/organic-food-and-garden-waste-and-mixed-recycling-blue-bin/thursday-collections';
+          const url = 'https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/organic-food-and-garden-waste-and-mixed-recycling-blue-bin/wednesday-collections';
           const timestamp = new Date().toISOString();
 
           (async () => {
