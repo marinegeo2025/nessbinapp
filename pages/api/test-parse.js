@@ -4,7 +4,7 @@ import path from "path";
 export default async function handler(req, res) {
   try {
     // ✅ Load the lightweight JSON file
-    const filePath = path.join(process.cwd(), "thursday.json");
+    const filePath = path.join(process.cwd(), "wednesday.json");
     const json = fs.readFileSync(filePath, "utf8");
     const data = JSON.parse(json);
 
