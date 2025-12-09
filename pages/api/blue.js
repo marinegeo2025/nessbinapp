@@ -59,11 +59,15 @@ export default async function handler(req, res) {
       }
     });
 
-    // 🕓 Last updated timestamp
-    const stats = fs.statSync(filePath);
-    const lastUpdated = new Date(stats.mtime).toLocaleString("en-GB", {
-      timeZone: "Europe/London",
-    });
+   // Use the GitHub Action scrape time or fallback to system time
+let lastUpdated = process.env.LAST_UPDATED;
+
+if (!lastUpdated) {
+  // fallback: use current server time (e.g. Vercel runtime)
+  lastUpdated = new Date().toLocaleString("en-GB", {
+    timeZone: "Europe/London",
+  });
+}
 
     // 🎨 Styled output
     res.setHeader("Content-Type", "text/html");
