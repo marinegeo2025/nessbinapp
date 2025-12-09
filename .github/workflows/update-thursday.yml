@@ -35,17 +35,20 @@ jobs:
             const browser = await puppeteer.launch({ headless: 'new' });
             const page = await browser.newPage();
             await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-            await page.waitForTimeout(8000); // let JS render accordions
+            await page.waitForTimeout(8000); // ensure JS accordion content loads
             const html = await page.content();
             fs.writeFileSync('thursday.html', html, 'utf8');
+            fs.writeFileSync('.lastupdated', new Date().toISOString(), 'utf8');
             await browser.close();
           })();
           "
 
-      - name: Commit and push updated file
+      - name: Commit updated files
         run: |
-          git config user.name "GitHub Actions Bot"
-          git config user.email "actions@github.com"
-          git add thursday.html
-          git commit -m "Auto-update Thursday bin schedule [skip ci]" || echo "No changes to commit"
+          echo "LAST_UPDATED=$(cat .lastupdated)" >> $GITHUB_ENV
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add thursday.html .lastupdated
+          git commit -m "Auto-update Thursday bin data ($(date))" || echo "No changes"
           git push
+
