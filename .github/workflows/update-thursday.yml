@@ -25,7 +25,7 @@ jobs:
         run: |
           npm install puppeteer@21
 
-      - name: Scrape CNES Thursday Collections page
+            - name: Scrape CNES Thursday Collections page
         run: |
           node - <<'EOF'
           import puppeteer from 'puppeteer';
@@ -49,10 +49,24 @@ jobs:
               const page = await browser.newPage();
               await page.goto(url, { waitUntil: 'networkidle2', timeout: 120000 });
               await page.waitForTimeout(10000); // allow JS accordions to render
-              const html = await page.content();
-              fs.writeFileSync('thursday.html', html, 'utf8');
+
+              // 🧩 Extract only the relevant content
+              const content = await page.evaluate(() => {
+                const el = document.querySelector('.accordion-pane-group');
+                return el ? el.outerHTML : '<p>⚠️ Could not find collection section.</p>';
+              });
+
+              // 🧹 Wrap it in a minimal HTML doc for safety
+              const cleanedHTML = `
+              <!DOCTYPE html>
+              <html lang="en">
+              <head><meta charset="UTF-8"><title>Thursday Bin Data</title></head>
+              <body>${content}</body>
+              </html>`;
+
+              fs.writeFileSync('thursday.html', cleanedHTML.trim(), 'utf8');
               await browser.close();
-              console.log('✅ Thursday schedule scraped successfully!');
+              console.log('✅ Thursday schedule trimmed and saved successfully!');
             } catch (err) {
               console.error('❌ Scrape failed:', err);
               process.exit(1);
