@@ -43,13 +43,20 @@ export default async function handler(req, res) {
       return res.status(500).send(`<p>${t.noData}</p>`);
     }
 
-    // 🗓️ Group dates by month
+    // 🗓️ Group dates by month, and clean them up
     const monthGroups = {};
-    nessBlock.dates.forEach((date) => {
-      const month = date.match(/[A-Za-z]+/);
-      const key = month ? month[0] : "Other";
-      if (!monthGroups[key]) monthGroups[key] = [];
-      monthGroups[key].push(date);
+    nessBlock.dates.forEach((fullDate) => {
+      const match = fullDate.match(/^([A-Za-z]+)\s+(\d+\w*)(.*)$/);
+      if (match) {
+        const [, month, day, note] = match;
+        const cleanDate = `${day}${note ? " " + note.trim() : ""}`;
+        if (!monthGroups[month]) monthGroups[month] = [];
+        monthGroups[month].push(cleanDate);
+      } else {
+        // fallback for weird strings
+        if (!monthGroups["Other"]) monthGroups["Other"] = [];
+        monthGroups["Other"].push(fullDate);
+      }
     });
 
     // 🕓 Last updated timestamp
@@ -76,10 +83,10 @@ export default async function handler(req, res) {
           <h2>${nessBlock.area}</h2>
           ${Object.entries(monthGroups)
             .map(
-              ([month, dates]) => `
+              ([month, days]) => `
               <h3>${month}</h3>
               <ul>
-                ${dates
+                ${days
                   .map(
                     (d) => `<li><i class="fas fa-calendar-day"></i> ${d}</li>`
                   )
