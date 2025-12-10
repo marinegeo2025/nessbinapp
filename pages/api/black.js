@@ -80,12 +80,12 @@ export default async function handler(req, res) {
     const galsonBlock = results.find((r) => /galson/i.test(r.area));
 
     const northNessHTML = nessBlock
-      ? renderArea("North Ness", nessBlock.dates, areaCoverage["North Ness"], t)
-      : `<p>${t.noData}</p>`;
+  ? renderArea(t.northNess, nessBlock.dates, areaCoverage["North Ness"])
+  : `<p>${t.noData}</p>`;
 
-    const southNessHTML = galsonBlock
-      ? renderArea("South Ness", galsonBlock.dates, areaCoverage["South Ness"], t)
-      : `<p>${t.noData}</p>`;
+const southNessHTML = galsonBlock
+  ? renderArea(t.southNess, galsonBlock.dates, areaCoverage["South Ness"])
+  : `<p>${t.noData}</p>`;
 
     res.setHeader("Content-Type", "text/html");
     res.status(200).send(`
