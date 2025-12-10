@@ -12,16 +12,24 @@ function groupByMonth(dates) {
   const groups = {};
   const now = new Date();
   const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth();
+  const currentMonth = now.getMonth(); // 0=Jan ... 11=Dec
 
   dates.forEach((d) => {
     const [month] = d.split(" ");
     let monthLabel = month;
-    if (currentMonth === 11 && /^(January|February|March)$/i.test(month)) {
-      monthLabel = `${month} ${currentYear + 1}`;
-    } else {
-      monthLabel = `${month} ${currentYear}`;
+
+    // ✅ Only add the year for early months (Jan–Mar) if relevant
+    if (
+      (currentMonth === 11 && /^(January|February|March)$/i.test(month)) ||
+      /^(January|February|March)$/i.test(month)
+    ) {
+      const year =
+        currentMonth === 11 && /^(January|February|March)$/i.test(month)
+          ? currentYear + 1
+          : currentYear;
+      monthLabel = `${month} ${year}`;
     }
+
     groups[monthLabel] = groups[monthLabel] || [];
     groups[monthLabel].push(d);
   });
