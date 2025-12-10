@@ -1,3 +1,4 @@
+// love peace and happiness
 import Head from "next/head";
 import { useState, useEffect } from "react";
 import translations from "../lib/translations";   // in index.js
