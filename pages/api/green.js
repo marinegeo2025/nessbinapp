@@ -4,11 +4,25 @@ import path from "path";
 // Helper: group dates by month
 function groupByMonth(dates) {
   const groups = {};
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth(); // 0 = Jan, 11 = Dec
+
   dates.forEach((d) => {
     const [month] = d.split(" ");
-    groups[month] = groups[month] || [];
-    groups[month].push(d);
+    let monthLabel = month;
+
+    // If we’re in December and the month is early in the next year, roll over
+    if (currentMonth === 11 && /^(January|February|March)$/i.test(month)) {
+      monthLabel = `${month} ${currentYear + 1}`;
+    } else {
+      monthLabel = `${month} ${currentYear}`;
+    }
+
+    groups[monthLabel] = groups[monthLabel] || [];
+    groups[monthLabel].push(d);
   });
+
   return Object.entries(groups);
 }
 
