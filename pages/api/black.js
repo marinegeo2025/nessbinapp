@@ -22,9 +22,9 @@ function groupByMonth(dates) {
 }
 
 // Helper: render one area's HTML
-function renderArea(area, dates, coverage) {
-  const coverageHTML = coverage
-    ? `<p class="coverage"><strong>Coverage:</strong> ${coverage}</p>`
+function renderArea(area, dates, locations) {
+  const locationsHTML = locations
+    ? `<p class="coverage">${locations}</p>`
     : "";
 
   const grouped = groupByMonth(dates)
@@ -41,7 +41,7 @@ function renderArea(area, dates, coverage) {
 
   return `
     <h2>${area}</h2>
-    ${coverageHTML}
+    ${locationsHTML}
     ${grouped}
   `;
 }
@@ -59,12 +59,10 @@ export default async function handler(req, res) {
       timeZone: "Europe/London",
     });
 
-    // Predefine coverage text for Ness and Galson
+    // Predefine location lists for display
     const areaCoverage = {
-      North Ness:
-        "Knockaird, Fivepenny, Eoropie, Port of Ness, Lionel, Eorodale, Adabrock, Skigersta, Cross Skigersta",
-      South Ness:
-        "Habost, Swainbost, Cross, North & South Dell",
+      Ness: "Knockaird, Fivepenny, Eoropie, Port of Ness, Lionel, Eorodale, Adabrock, Skigersta, Cross Skigersta",
+      Galson: "Habost, Swainbost, Cross, North & South Dell",
     };
 
     const nessBlock = results.find((r) => /ness/i.test(r.area));
@@ -89,8 +87,12 @@ export default async function handler(req, res) {
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-          .coverage { font-style: italic; margin-top: -8px; margin-bottom: 12px; color: #333; }
-          .coverage strong { font-weight: 600; color: #000; }
+          .coverage {
+            font-style: normal;
+            margin-top: -8px;
+            margin-bottom: 12px;
+            color: #333;
+          }
         </style>
       </head>
       <body class="black-page">
