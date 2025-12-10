@@ -1,21 +1,23 @@
 import fs from "fs";
 import path from "path";
 
-// Helper: group date strings by month label
+// ✅ Helper: group date strings by month and roll over for next year if needed
 function groupByMonth(dates) {
   const groups = {};
   const now = new Date();
   const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth();
+  const currentMonth = now.getMonth(); // 0 = Jan, 11 = Dec
 
   dates.forEach((d) => {
     const [month] = d.split(" ");
     let monthLabel = month;
+
     if (currentMonth === 11 && /^(January|February|March)$/i.test(month)) {
       monthLabel = `${month} ${currentYear + 1}`;
     } else {
       monthLabel = `${month} ${currentYear}`;
     }
+
     groups[monthLabel] = groups[monthLabel] || [];
     groups[monthLabel].push(d);
   });
@@ -23,11 +25,11 @@ function groupByMonth(dates) {
   return Object.entries(groups);
 }
 
-// Helper: render each area's HTML
+// ✅ Helper: render one section (area + villages + date list)
 function renderArea(title, dates, coverage) {
   return `
     <h2>${title}</h2>
-    <p class="coverage">${coverage}</p>
+    <p class="coverage"><em>${coverage}</em></p>
     ${groupByMonth(dates)
       .map(
         ([month, monthDates]) => `
@@ -35,7 +37,10 @@ function renderArea(title, dates, coverage) {
           <ul>
             ${monthDates
               .map((d) => {
-                const cleaned = d.replace(new RegExp("^" + month + "\\s*", "i"), "").trim();
+                // 🧹 Remove the month name from inside each date
+                const cleaned = d
+                  .replace(/^[A-Za-z]+\s*/, "")
+                  .trim();
                 return `<li><i class="fas fa-calendar-day"></i> ${cleaned}</li>`;
               })
               .join("")}
@@ -58,7 +63,7 @@ export default async function handler(req, res) {
       timeZone: "Europe/London",
     });
 
-    // Define fixed location lists
+    // ✅ Location lists
     const areaCoverage = {
       "North Ness": "Knockaird, Fivepenny, Eoropie, Port of Ness, Lionel, Eorodale, Adabrock, Skigersta, Cross Skigersta",
       "South Ness": "Habost, Swainbost, Cross, North & South Dell",
@@ -89,8 +94,8 @@ export default async function handler(req, res) {
           .coverage {
             font-style: italic;
             margin-top: -6px;
-            margin-bottom: 12px;
-            color: #333;
+            margin-bottom: 10px;
+            color: #444;
           }
         </style>
       </head>
