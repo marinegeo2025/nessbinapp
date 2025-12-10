@@ -253,3 +253,38 @@ body.green-page h1 {
   50% { transform: scale(1.2); opacity: 1; filter: drop-shadow(0 0 8px green); }
   100% { transform: scale(1); opacity: 0.8; filter: drop-shadow(0 0 5px gold); }
 }
+
+/* ❄️ Snowfall effect (December only) */
+.snow {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background-image:
+    radial-gradient(white 1px, transparent 1px),
+    radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+    radial-gradient(rgba(173, 255, 200, 0.8) 1px, transparent 1px);
+  background-size: 6px 6px, 8px 8px, 10px 10px;
+  background-position: 0 0, 50px 50px, 100px 100px;
+  animation: snowFall 20s linear infinite;
+  opacity: 0.7;
+}
+
+@keyframes snowFall {
+  0% {
+    background-position: 0 0, 50px 50px, 100px 100px;
+  }
+  100% {
+    background-position: 0 1000px, 50px 1050px, 100px 1100px;
+  }
+}
+
+/* Ensure content layers above snow */
+.container {
+  position: relative;
+  z-index: 1;
+}
+
