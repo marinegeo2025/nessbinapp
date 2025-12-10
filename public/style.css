@@ -191,7 +191,7 @@ body.green-page h1 {
 
 /* Button sits inside flex, not absolute */
 .lang-toggle {
-  margin-left: 20px
+  margin-left: 20px;
   align-self: flex-start;
   padding: 8px 16px;
   border-radius: 6px;
