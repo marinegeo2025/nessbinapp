@@ -1,0 +1,83 @@
+name: Update Black Bin Schedule
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # every day at 3 AM UTC
+  workflow_dispatch:
+
+jobs:
+  update-black:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Puppeteer
+        run: npm install puppeteer@21
+
+      - name: Scrape CNES Wednesday Black Bin Collections (JSON)
+        run: |
+          node - <<'EOF'
+          import puppeteer from 'puppeteer';
+          import fs from 'fs';
+
+          const url = 'https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/non-recyclable-waste-grey-bin-purple-sticker/wednesday-collections';
+          const timestamp = new Date().toISOString();
+
+          (async () => {
+            try {
+              const browser = await puppeteer.launch({
+                headless: true,
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+              });
+              const page = await browser.newPage();
+              await page.goto(url, { waitUntil: 'networkidle2', timeout: 120000 });
+
+              // Expand all accordion sections
+              await page.evaluate(() => {
+                document.querySelectorAll('.accordion-pane__title button').forEach(b => b.click());
+              });
+              await page.waitForTimeout(3000);
+
+              // Extract area names and dates
+              const data = await page.evaluate(() => {
+                const items = [];
+                document.querySelectorAll('.accordion-pane').forEach(section => {
+                  const area = section.querySelector('button')?.textContent?.trim() || '';
+                  const dates = Array.from(section.querySelectorAll('ol li')).map(li => li.textContent.trim());
+                  if (area && dates.length) items.push({ area, dates });
+                });
+                return items;
+              });
+
+              const result = {
+                lastUpdated: timestamp,
+                count: data.length,
+                results: data
+              };
+
+              fs.writeFileSync('black.json', JSON.stringify(result, null, 2), 'utf8');
+              await browser.close();
+              console.log('✅ Black bin data saved to black.json');
+            } catch (err) {
+              console.error('❌ Scrape failed:', err);
+              process.exit(1);
+            }
+          })();
+          EOF
+
+      - name: Commit updated JSON
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add black.json
+          git commit -m "Auto-update Black bin JSON ($(date))" || echo "No changes"
+          git push
