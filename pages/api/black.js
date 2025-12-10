@@ -61,8 +61,8 @@ export default async function handler(req, res) {
 
     // Predefine location lists for display
     const areaCoverage = {
-      North Ness: "Knockaird, Fivepenny, Eoropie, Port of Ness, Lionel, Eorodale, Adabrock, Skigersta, Cross Skigersta",
-      South Ness: "Habost, Swainbost, Cross, North & South Dell",
+      "North Ness": "Knockaird, Fivepenny, Eoropie, Port of Ness, Lionel, Eorodale, Adabrock, Skigersta, Cross Skigersta",
+      "South Ness": "Habost, Swainbost, Cross, North & South Dell",
     };
 
     const nessBlock = results.find((r) => /ness/i.test(r.area));
