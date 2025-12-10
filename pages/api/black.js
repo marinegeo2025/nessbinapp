@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import translations from "../../lib/translations.js";
 
-//Helper for month translations
+// Helper for month translations
 function translateMonth(month, t) {
   return t.months?.[month] || month;
 }
@@ -30,14 +30,18 @@ function groupByMonth(dates) {
 }
 
 // Render helper
-function renderArea(title, dates, coverage) {
+function renderArea(title, dates, coverage, t) {
   return `
     <h2>${title}</h2>
     <p class="coverage"><em>${coverage}</em></p>
     ${groupByMonth(dates)
-      .map(
-        ([month, monthDates]) => `
-          <h3>${month}</h3>
+      .map(([month, monthDates]) => {
+        // separate month + year
+        const [rawMonth, year] = month.split(" ");
+        const translatedMonth = translateMonth(rawMonth, t);
+
+        return `
+          <h3>${translatedMonth}${year ? " " + year : ""}</h3>
           <ul>
             ${monthDates
               .map((d) => {
@@ -45,8 +49,8 @@ function renderArea(title, dates, coverage) {
                 return `<li><i class="fas fa-calendar-day"></i> ${cleaned}</li>`;
               })
               .join("")}
-          </ul>`
-      )
+          </ul>`;
+      })
       .join("")}
   `;
 }
@@ -76,11 +80,11 @@ export default async function handler(req, res) {
     const galsonBlock = results.find((r) => /galson/i.test(r.area));
 
     const northNessHTML = nessBlock
-      ? renderArea("North Ness", nessBlock.dates, areaCoverage["North Ness"])
+      ? renderArea("North Ness", nessBlock.dates, areaCoverage["North Ness"], t)
       : `<p>${t.noData}</p>`;
 
     const southNessHTML = galsonBlock
-      ? renderArea("South Ness", galsonBlock.dates, areaCoverage["South Ness"])
+      ? renderArea("South Ness", galsonBlock.dates, areaCoverage["South Ness"], t)
       : `<p>${t.noData}</p>`;
 
     res.setHeader("Content-Type", "text/html");
