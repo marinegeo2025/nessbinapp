@@ -86,44 +86,42 @@ export default function Home() {
           </li>
         </ul>
 
-       <div style={{ marginTop: "20px" }}>
-  <h3>{t.calendarHeader}</h3>
-  <a
-    href={`/api/calendar/north?lang=${lang}`}
-    className="bin-link north-bin-link"
-  >
-    <i className="fas fa-download icon"></i> {t.northSchedule}
-    <br />
-    <span className="subtext">{t.northVillages}</span>
-  </a>
-  <a
-    href={`/api/calendar/south?lang=${lang}`}
-    className="bin-link south-bin-link"
-  >
-    <i className="fas fa-download icon"></i> {t.southSchedule}
-    <br />
-    <span className="subtext">{t.southVillages}</span>
-  </a>
-</div>
-
-</div>
-
-{/* 🎄 Festive Message (December only) */}
-{new Date().getMonth() === 11 && (
-  <>
-    {/* ❄️ Snowfall (December only) */}
-    <div className="snow"></div>
-
-    <div className="festive-message">
-      <p>{t.festiveMessage}</p>
-      <div className="sparkle-wrap">
-        <span>✨</span><span>🎅</span><span>🎄</span><span>⭐</span><span>🎁</span>
+             <div style={{ marginTop: "20px" }}>
+        <h3>{t.calendarHeader}</h3>
+        <a
+          href={`/api/calendar/north?lang=${lang}`}
+          className="bin-link north-bin-link"
+        >
+          <i className="fas fa-download icon"></i> {t.northSchedule}
+          <br />
+          <span className="subtext">{t.northVillages}</span>
+        </a>
+        <a
+          href={`/api/calendar/south?lang=${lang}`}
+          className="bin-link south-bin-link"
+        >
+          <i className="fas fa-download icon"></i> {t.southSchedule}
+          <br />
+          <span className="subtext">{t.southVillages}</span>
+        </a>
       </div>
-    </div>
-  </>
-)}
 
-  <div
+      {/* 🎄 Festive Message (December only) */}
+      {new Date().getMonth() === 11 && (
+        <>
+          {/* ❄️ Snowfall (December only) */}
+          <div className="snow"></div>
+
+          <div className="festive-message">
+            <p>{t.festiveMessage}</p>
+            <div className="sparkle-wrap">
+              <span>✨</span><span>🎅</span><span>🎄</span><span>⭐</span><span>🎁</span>
+            </div>
+          </div>
+        </>
+      )}
+
+      <div
         className="credit"
         dangerouslySetInnerHTML={{ __html: `${t.credit}<br /><br />${t.licence}` }}
       />
@@ -133,4 +131,3 @@ export default function Home() {
   </>
   );
 }
-
