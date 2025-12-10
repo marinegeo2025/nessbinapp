@@ -101,7 +101,7 @@ export default async function handler(req, res) {
       </head>
       <body class="black-page">
         <div class="container">
-          <h1><i class="fas fa-trash-alt"></i> BLACK Bin Collection Dates (North Ness & South Ness)</h1>
+          <h1><i class="fas fa-trash-alt"></i> BLACK Bin Collection Dates</h1>
           ${northNessHTML}
           ${southNessHTML}
           <p class="last-updated"><em>LAST UPDATED: ${lastUpdated}</em></p>
