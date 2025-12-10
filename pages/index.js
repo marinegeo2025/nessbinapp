@@ -105,6 +105,18 @@ export default function Home() {
   </a>
 </div>
 
+</div>
+
+{/* 🎄 Festive Message (December only) */}
+{new Date().getMonth() === 11 && (
+  <div className="festive-message">
+    <p>{t.festiveMessage}</p>
+    <div className="sparkle-wrap">
+      <span>✨</span><span>🎅</span><span>🎄</span><span>⭐</span><span>🎁</span>
+    </div>
+  </div>
+)}
+
 <div
   className="credit"
   dangerouslySetInnerHTML={{ __html: `${t.credit}<br /><br />${t.licence}` }}
