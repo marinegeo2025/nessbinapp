@@ -1,3 +1,4 @@
+// love peace and happiness
 import fs from "fs";
 import path from "path";
 import translations from "../../lib/translations.js";
