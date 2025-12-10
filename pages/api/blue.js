@@ -79,7 +79,7 @@ monthGroups[monthLabel].push(displayDate);
       <body class="blue-page">
         <div class="container">
           <h1><i class="fas fa-recycle"></i> ${t.blueTitle}</h1>
-          <h2>${nessBlock.area}</h2>
+          
           ${Object.entries(monthGroups)
             .map(
               ([month, days]) => `
