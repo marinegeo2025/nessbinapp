@@ -1,65 +1,20 @@
-// pages/api/calendar/[area].js
-
-import axios from "axios";
-import * as cheerio from "cheerio";
 import fs from "fs";
 import path from "path";
 import { createEvents } from "ics";
-import translations from "../../../lib/translations";
-import { validateBinTable } from "../../../lib/failsafe";
+import translations from "../../../lib/translations.js";
 
-// CNES URLs
-const BLACK_URL =
-  "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/non-recyclable-waste-grey-bin-purple-sticker/thursday-collections";
-const GREEN_URL =
-  "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/glass-green-bin-collections/friday-collections";
-
-// --- Utility: clean “21st” → 21
+// Clean “21st” → 21
 function cleanDate(d) {
   if (!d) return null;
   const match = d.trim().match(/^(\d+)/);
   return match ? parseInt(match[1], 10) : null;
 }
 
-// --- Parse tabular CNES bin data into { month: [dates...] }
-function parseBinTable($, keyword) {
-  const headers = [];
-  $("thead th").each((i, th) => headers.push($(th).text().trim()));
-  if (headers.length === 0) {
-    $("tr").first().find("th,td").each((i, cell) => headers.push($(cell).text().trim()));
-  }
-
-  const data = {};
-  const rows = $("tbody tr").length ? $("tbody tr") : $("tr").slice(1);
-
-  rows.each((_, row) => {
-    const cells = $(row).find("th,td");
-    if (cells.length >= 2) {
-      const area = $(cells[0]).text().trim();
-      if (area.toLowerCase().includes(keyword.toLowerCase())) {
-        for (let i = 1; i < cells.length; i++) {
-          const month = headers[i];
-          const dates = $(cells[i]).text().trim();
-          if (month && dates && dates.toLowerCase() !== "n/a") {
-            const parts = dates
-              .split(",")
-              .map((x) => cleanDate(x))
-              .filter(Boolean);
-            if (parts.length) {
-              data[month] = (data[month] || []).concat(parts);
-            }
-          }
-        }
-      }
-    }
-  });
-  return data;
-}
-
-// --- Build ICS events
+// Build ICS events
 function buildEvents(binType, t, areaName, data) {
   const year = new Date().getFullYear();
   const events = [];
+
   for (const [month, days] of Object.entries(data)) {
     for (const day of days) {
       const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
@@ -76,51 +31,62 @@ function buildEvents(binType, t, areaName, data) {
 
 export default async function handler(req, res) {
   const { area } = req.query;
-  const lang = req.query.lang === "en" ? "en" : "gd";
+  const lang = req.query.lang === "gd" ? "gd" : "en";
   const t = translations[lang];
 
   try {
-    // --- BLACK BIN (live CNES)
-    const blackResp = await axios.get(BLACK_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
-    const $black = cheerio.load(blackResp.data);
-    validateBinTable($black, { expectedMonths: [], requiredKeyword: "Ness" });
-    const blackData = parseBinTable($black, "Ness");
+    // --- Load local JSON data
+    const loadJSON = (filename) => {
+      const filePath = path.join(process.cwd(), filename);
+      if (!fs.existsSync(filePath)) return null;
+      return JSON.parse(fs.readFileSync(filePath, "utf8"));
+    };
 
-    // --- GREEN BIN (live CNES)
-    const greenResp = await axios.get(GREEN_URL, { headers: { "User-Agent": "Mozilla/5.0" } });
-    const $green = cheerio.load(greenResp.data);
-    validateBinTable($green, { expectedMonths: [], requiredKeyword: "Ness" });
-    const greenData = parseBinTable($green, "Ness");
+    const black = loadJSON("black.json");
+    const blue = loadJSON("wednesday.json");
+    const green = loadJSON("green.json");
 
-    // --- BLUE BIN (from pre-scraped JSON)
-    let blueData = {};
-    try {
-      const filePath = path.join(process.cwd(), "wednesday.json");
-      if (fs.existsSync(filePath)) {
-        const json = JSON.parse(fs.readFileSync(filePath, "utf8"));
-        const nessBlock = json.results.find((r) =>
-          r.area.toLowerCase().includes("ness")
-        );
-        if (nessBlock) {
-          nessBlock.dates.forEach((d) => {
-            const [month, dayRaw] = d.split(" ");
-            const day = cleanDate(dayRaw);
-            if (!isNaN(day)) {
-              blueData[month] = blueData[month] || [];
-              blueData[month].push(day);
-            }
-          });
-        }
-      }
-    } catch (err) {
-      console.warn("⚠️ Could not load wednesday.json for blue bins:", err.message);
+    if (!black || !blue || !green) {
+      throw new Error("Missing local JSON bin data.");
     }
 
-    // --- Combine all bins
+    // --- Extract areas
+    const blackNorth = black.results.find((r) => /ness/i.test(r.area));
+    const blackSouth = black.results.find((r) => /galson/i.test(r.area));
+    const blueNess = blue.results.find((r) => /ness/i.test(r.area));
+    const greenNess = green.results.find((r) => /ness/i.test(r.area));
+
+    // --- Convert to { month: [dayNumbers] }
+    const convertToMonthData = (dates) => {
+      const data = {};
+      dates.forEach((d) => {
+        const [month, dayRaw] = d.split(" ");
+        const day = cleanDate(dayRaw);
+        if (!isNaN(day)) {
+          data[month] = data[month] || [];
+          data[month].push(day);
+        }
+      });
+      return data;
+    };
+
+    const blackNorthData = blackNorth ? convertToMonthData(blackNorth.dates) : {};
+    const blackSouthData = blackSouth ? convertToMonthData(blackSouth.dates) : {};
+    const blueData = blueNess ? convertToMonthData(blueNess.dates) : {};
+    const greenData = greenNess ? convertToMonthData(greenNess.dates) : {};
+
+    // --- Combine
     let events = [];
-    if (area === "north" || area === "south") {
+
+    if (area === "north") {
       events = [
-        ...buildEvents("black", t, "Ness", blackData),
+        ...buildEvents("black", t, lang === "gd" ? "Nis a Tuath" : "North Ness", blackNorthData),
+        ...buildEvents("blue", t, "Ness", blueData),
+        ...buildEvents("green", t, "Ness", greenData),
+      ];
+    } else if (area === "south") {
+      events = [
+        ...buildEvents("black", t, lang === "gd" ? "Nis a Deas" : "South Ness", blackSouthData),
         ...buildEvents("blue", t, "Ness", blueData),
         ...buildEvents("green", t, "Ness", greenData),
       ];
