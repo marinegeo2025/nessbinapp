@@ -13,6 +13,8 @@ function groupByMonth(dates) {
     let monthLabel = month;
     if (currentMonth === 11 && /^(January|February|March)$/i.test(month)) {
       monthLabel = `${month} ${currentYear + 1}`;
+    } else {
+      monthLabel = `${month} ${currentYear}`;
     }
     groups[monthLabel] = groups[monthLabel] || [];
     groups[monthLabel].push(d);
@@ -21,28 +23,25 @@ function groupByMonth(dates) {
   return Object.entries(groups);
 }
 
-// Helper: render one area's HTML
-function renderArea(area, dates, locations) {
-  const locationsHTML = locations
-    ? `<p class="coverage">${locations}</p>`
-    : "";
-
-  const grouped = groupByMonth(dates)
-    .map(([month, monthDates]) => {
-      const cleaned = monthDates
-        .map((d) => {
-          const stripped = d.replace(new RegExp("^" + month + "\\s*", "i"), "").trim();
-          return `<li><i class="fas fa-calendar-day"></i> ${stripped}</li>`;
-        })
-        .join("");
-      return `<h3>${month}</h3><ul>${cleaned}</ul>`;
-    })
-    .join("");
-
+// Helper: render each area's HTML
+function renderArea(title, dates, coverage) {
   return `
-    <h2>${area}</h2>
-    ${locationsHTML}
-    ${grouped}
+    <h2>${title}</h2>
+    <p class="coverage">${coverage}</p>
+    ${groupByMonth(dates)
+      .map(
+        ([month, monthDates]) => `
+          <h3>${month}</h3>
+          <ul>
+            ${monthDates
+              .map((d) => {
+                const cleaned = d.replace(new RegExp("^" + month + "\\s*", "i"), "").trim();
+                return `<li><i class="fas fa-calendar-day"></i> ${cleaned}</li>`;
+              })
+              .join("")}
+          </ul>`
+      )
+      .join("")}
   `;
 }
 
@@ -59,7 +58,7 @@ export default async function handler(req, res) {
       timeZone: "Europe/London",
     });
 
-    // Predefine location lists for display
+    // Define fixed location lists
     const areaCoverage = {
       "North Ness": "Knockaird, Fivepenny, Eoropie, Port of Ness, Lionel, Eorodale, Adabrock, Skigersta, Cross Skigersta",
       "South Ness": "Habost, Swainbost, Cross, North & South Dell",
@@ -68,13 +67,13 @@ export default async function handler(req, res) {
     const nessBlock = results.find((r) => /ness/i.test(r.area));
     const galsonBlock = results.find((r) => /galson/i.test(r.area));
 
-    const nessHTML = nessBlock
-      ? renderArea(nessBlock.area, nessBlock.dates, areaCoverage.Ness)
-      : "<p>No data found for Ness.</p>";
+    const northNessHTML = nessBlock
+      ? renderArea("North Ness", nessBlock.dates, areaCoverage["North Ness"])
+      : "<p>No data found for North Ness.</p>";
 
-    const galsonHTML = galsonBlock
-      ? renderArea(galsonBlock.area, galsonBlock.dates, areaCoverage.Galson)
-      : "<p>No data found for Ness.</p>";
+    const southNessHTML = galsonBlock
+      ? renderArea("South Ness", galsonBlock.dates, areaCoverage["South Ness"])
+      : "<p>No data found for South Ness.</p>";
 
     res.setHeader("Content-Type", "text/html");
     res.status(200).send(`
@@ -88,8 +87,8 @@ export default async function handler(req, res) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           .coverage {
-            font-style: normal;
-            margin-top: -8px;
+            font-style: italic;
+            margin-top: -6px;
             margin-bottom: 12px;
             color: #333;
           }
@@ -98,8 +97,8 @@ export default async function handler(req, res) {
       <body class="black-page">
         <div class="container">
           <h1><i class="fas fa-trash-alt"></i> BLACK Bin Collection Dates (North Ness & South Ness)</h1>
-          ${nessHTML}
-          ${galsonHTML}
+          ${northNessHTML}
+          ${southNessHTML}
           <p class="last-updated"><em>LAST UPDATED: ${lastUpdated}</em></p>
           <a class="back" href="/?lang=en">← Back</a>
         </div>
