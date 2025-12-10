@@ -123,14 +123,14 @@ export default function Home() {
   </>
 )}
 
-<div
-  className="credit"
-  dangerouslySetInnerHTML={{ __html: `${t.credit}<br /><br />${t.licence}` }}
-/>
+  <div
+        className="credit"
+        dangerouslySetInnerHTML={{ __html: `${t.credit}<br /><br />${t.licence}` }}
+      />
 
-<p className="cute-text">{t.cute}</p>
-</div>
-</>
-);
+      <p className="cute-text">{t.cute}</p>
+    </div>
+  </>
+  );
 }
 
