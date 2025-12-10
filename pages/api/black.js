@@ -61,10 +61,10 @@ export default async function handler(req, res) {
 
     // Predefine coverage text for Ness and Galson
     const areaCoverage = {
-      Ness:
-        "Knockaird, Fivepenny, Butt, Eoropie, Port of Ness, Lionel, Eorodale, Adabrock, Cross, Skigersta",
-      Galson:
-        "Habost, Swainbost, Cross, North & South Dell, North & South Galson, Melbost Borve, High Borve, Borve",
+      North Ness:
+        "Knockaird, Fivepenny, Eoropie, Port of Ness, Lionel, Eorodale, Adabrock, Skigersta, Cross Skigersta",
+      South Ness:
+        "Habost, Swainbost, Cross, North & South Dell",
     };
 
     const nessBlock = results.find((r) => /ness/i.test(r.area));
