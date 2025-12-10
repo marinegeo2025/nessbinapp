@@ -23,13 +23,13 @@ jobs:
       - name: Install Puppeteer
         run: npm install puppeteer@21
 
-      - name: Scrape CNES Wednesday Black Bin Collections (JSON)
+      - name: Scrape CNES Thursday Black Bin Collections (JSON)
         run: |
           node - <<'EOF'
           import puppeteer from 'puppeteer';
           import fs from 'fs';
 
-          const url = 'https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/non-recyclable-waste-grey-bin-purple-sticker/wednesday-collections';
+          const url = 'https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/non-recyclable-waste-grey-bin-purple-sticker/thursday-collections';
           const timestamp = new Date().toISOString();
 
           (async () => {
@@ -41,19 +41,28 @@ jobs:
               const page = await browser.newPage();
               await page.goto(url, { waitUntil: 'networkidle2', timeout: 120000 });
 
-              // Expand all accordion sections
+              // Expand all accordion panels
               await page.evaluate(() => {
                 document.querySelectorAll('.accordion-pane__title button').forEach(b => b.click());
               });
               await page.waitForTimeout(3000);
 
-              // Extract area names and dates
+              // Extract data (area, dates, and coverage info)
               const data = await page.evaluate(() => {
                 const items = [];
                 document.querySelectorAll('.accordion-pane').forEach(section => {
                   const area = section.querySelector('button')?.textContent?.trim() || '';
-                  const dates = Array.from(section.querySelectorAll('ol li')).map(li => li.textContent.trim());
-                  if (area && dates.length) items.push({ area, dates });
+                  const dateEls = Array.from(section.querySelectorAll('ol li'));
+                  const dates = dateEls.map(li => li.textContent.trim()).filter(Boolean);
+
+                  const coverageEl = section.querySelector('strong, b');
+                  const coverage = coverageEl
+                    ? coverageEl.nextSibling?.textContent?.trim() || ''
+                    : '';
+
+                  if (area && dates.length) {
+                    items.push({ area, dates, coverage });
+                  }
                 });
                 return items;
               });
@@ -78,6 +87,7 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
+          git pull --rebase origin main || true
           git add black.json
           git commit -m "Auto-update Black bin JSON ($(date))" || echo "No changes"
           git push
