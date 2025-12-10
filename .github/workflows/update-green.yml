@@ -1,0 +1,86 @@
+name: Update Friday Green Bin Schedule
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # runs daily at 3 AM UTC
+  workflow_dispatch:
+
+jobs:
+  update-green:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Puppeteer
+        run: npm install puppeteer@21
+
+      - name: Scrape CNES Friday Collections (Green Bin JSON)
+        run: |
+          node - <<'EOF'
+          import puppeteer from 'puppeteer';
+          import fs from 'fs';
+
+          const url = 'https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/glass-green-bin-collections/friday-collections';
+          const timestamp = new Date().toISOString();
+
+          (async () => {
+            try {
+              const browser = await puppeteer.launch({
+                headless: true,
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+              });
+              const page = await browser.newPage();
+              await page.goto(url, { waitUntil: 'networkidle2', timeout: 120000 });
+
+              // Expand all accordions
+              await page.evaluate(() => {
+                document.querySelectorAll('.accordion-pane__title button').forEach(b => b.click());
+              });
+              await page.waitForTimeout(3000);
+
+              const data = await page.evaluate(() => {
+                const items = [];
+                document.querySelectorAll('.accordion-pane').forEach(section => {
+                  const area = section.querySelector('button')?.textContent?.trim() || '';
+                  const dateList = Array.from(section.querySelectorAll('ol li')).map(li => li.textContent.trim());
+                  const coverageHeader = section.querySelector('p strong')?.textContent?.includes('locations') 
+                    ? section.querySelector('p + p')?.textContent?.trim() 
+                    : '';
+                  if (area && dateList.length) items.push({ area, dates: dateList, coverage: coverageHeader });
+                });
+                return items;
+              });
+
+              const result = {
+                lastUpdated: timestamp,
+                count: data.length,
+                results: data
+              };
+
+              fs.writeFileSync('green.json', JSON.stringify(result, null, 2), 'utf8');
+              await browser.close();
+              console.log('✅ Friday Green Bin data saved to green.json');
+            } catch (err) {
+              console.error('❌ Green bin scrape failed:', err);
+              process.exit(1);
+            }
+          })();
+          EOF
+
+      - name: Commit and push updates
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git pull --rebase origin main || true
+          git add green.json
+          git commit -m "Auto-update Friday Green bin JSON ($(date))" || echo "No changes"
+          git push
