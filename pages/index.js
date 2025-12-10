@@ -109,12 +109,17 @@ export default function Home() {
 
 {/* 🎄 Festive Message (December only) */}
 {new Date().getMonth() === 11 && (
-  <div className="festive-message">
-    <p>{t.festiveMessage}</p>
-    <div className="sparkle-wrap">
-      <span>✨</span><span>🎅</span><span>🎄</span><span>⭐</span><span>🎁</span>
+  <>
+    {/* ❄️ Snowfall (December only) */}
+    <div className="snow"></div>
+
+    <div className="festive-message">
+      <p>{t.festiveMessage}</p>
+      <div className="sparkle-wrap">
+        <span>✨</span><span>🎅</span><span>🎄</span><span>⭐</span><span>🎁</span>
+      </div>
     </div>
-  </div>
+  </>
 )}
 
 <div
