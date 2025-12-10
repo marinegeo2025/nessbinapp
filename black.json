@@ -1,1 +1,60 @@
-
+{
+  "lastUpdated": "2025-12-10T10:49:49.649Z",
+  "count": 6,
+  "results": [
+    {
+      "area": "North Lochs",
+      "dates": [
+        "December 11th",
+        "January 3rd (Rescheduled New Year collection)",
+        "January 22nd"
+      ],
+      "coverage": ""
+    },
+    {
+      "area": "Tong / Newmarket",
+      "dates": [
+        "December 11th",
+        "January 3rd (Rescheduled New Year collection)",
+        "January 22nd"
+      ],
+      "coverage": ""
+    },
+    {
+      "area": "Galson",
+      "dates": [
+        "December 18th",
+        "January 8th",
+        "January 29th"
+      ],
+      "coverage": ""
+    },
+    {
+      "area": "Leverburgh",
+      "dates": [
+        "December 18th",
+        "January 8th",
+        "January 29th"
+      ],
+      "coverage": ""
+    },
+    {
+      "area": "Ness",
+      "dates": [
+        "December 4th",
+        "December 27 (Rescheduled Christmas Day collection)",
+        "January 15th"
+      ],
+      "coverage": ""
+    },
+    {
+      "area": "Harris Bays",
+      "dates": [
+        "December 4th",
+        "December 27 (Rescheduled Christmas Day collection)",
+        "January 15th"
+      ],
+      "coverage": ""
+    }
+  ]
+}
