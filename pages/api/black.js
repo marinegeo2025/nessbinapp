@@ -36,10 +36,8 @@ function renderArea(title, dates, coverage, t) {
     <p class="coverage"><em>${coverage}</em></p>
     ${groupByMonth(dates)
       .map(([month, monthDates]) => {
-        // separate month + year
         const [rawMonth, year] = month.split(" ");
         const translatedMonth = translateMonth(rawMonth, t);
-
         return `
           <h3>${translatedMonth}${year ? " " + year : ""}</h3>
           <ul>
@@ -80,12 +78,12 @@ export default async function handler(req, res) {
     const galsonBlock = results.find((r) => /galson/i.test(r.area));
 
     const northNessHTML = nessBlock
-  ? renderArea(t.northNess, nessBlock.dates, areaCoverage["North Ness"])
-  : `<p>${t.noData}</p>`;
+      ? renderArea(t.northNess, nessBlock.dates, areaCoverage["North Ness"], t)
+      : `<p>${t.noData}</p>`;
 
-const southNessHTML = galsonBlock
-  ? renderArea(t.southNess, galsonBlock.dates, areaCoverage["South Ness"])
-  : `<p>${t.noData}</p>`;
+    const southNessHTML = galsonBlock
+      ? renderArea(t.southNess, galsonBlock.dates, areaCoverage["South Ness"], t)
+      : `<p>${t.noData}</p>`;
 
     res.setHeader("Content-Type", "text/html");
     res.status(200).send(`
