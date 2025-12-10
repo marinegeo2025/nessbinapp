@@ -2,6 +2,11 @@ import fs from "fs";
 import path from "path";
 import translations from "../../lib/translations.js";
 
+//Helper for month translations
+function translateMonth(month, t) {
+  return t.months?.[month] || month;
+}
+
 // Helper: group date strings by month
 function groupByMonth(dates) {
   const groups = {};
