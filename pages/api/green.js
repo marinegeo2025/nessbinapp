@@ -2,6 +2,11 @@ import fs from "fs";
 import path from "path";
 import translations from "../../lib/translations.js";
 
+// Helper for month translations
+function translateMonth(month, t) {
+  return t.months?.[month] || month;
+}
+
 export default async function handler(req, res) {
   const lang = req.query.lang === "gd" ? "gd" : "en";
   const t = translations[lang];
@@ -22,7 +27,6 @@ export default async function handler(req, res) {
 
     const nessHTML = nessBlock
       ? `
-          <h2>${nessBlock.area}</h2>
           ${Object.entries(
             nessBlock.dates.reduce((acc, date) => {
               const [month] = date.split(" ");
@@ -31,9 +35,19 @@ export default async function handler(req, res) {
               return acc;
             }, {})
           )
-            .map(
-              ([month, days]) => `
-                <h3>${month}</h3>
+            .map(([month, days]) => {
+              // Determine year rollover for December scraping
+              const currentYear = new Date(json.lastUpdated).getFullYear();
+              const currentMonth = new Date(json.lastUpdated).getMonth();
+              let year = currentYear;
+              if (currentMonth === 11 && /^(January|February|March)$/i.test(month)) {
+                year = currentYear + 1;
+              }
+
+              const translatedMonth = translateMonth(month, t);
+
+              return `
+                <h3>${translatedMonth} ${year}</h3>
                 <ul>
                   ${days
                     .map(
@@ -41,8 +55,8 @@ export default async function handler(req, res) {
                         `<li><i class="fas fa-calendar-day"></i> ${d}</li>`
                     )
                     .join("")}
-                </ul>`
-            )
+                </ul>`;
+            })
             .join("")}
         `
       : `<p>${t.noData}</p>`;
