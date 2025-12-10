@@ -2,8 +2,13 @@ import fs from "fs";
 import path from "path";
 import translations from "../../lib/translations.js";
 
+// Helper for month translations
+function translateMonth(month, t) {
+  return t.months?.[month] || month;
+}
+
 export default async function handler(req, res) {
-  const lang = req.query.lang === "en" ? "en" : "gd";
+  const lang = req.query.lang === "gd" ? "gd" : "en";
   const t = translations[lang];
 
   try {
@@ -16,10 +21,10 @@ export default async function handler(req, res) {
       `);
     }
 
-    // 📦 Load the JSON file
+    // 📦 Load JSON
     const json = JSON.parse(fs.readFileSync(filePath, "utf8"));
 
-    // 🟦 Find the Ness area
+    // 🟦 Find Ness area
     const nessBlock = json.results.find((r) =>
       r.area.toLowerCase().includes("ness")
     );
@@ -35,31 +40,28 @@ export default async function handler(req, res) {
       if (match) {
         const [, month, day, note] = match;
         const currentYear = new Date(json.lastUpdated).getFullYear();
-const currentMonth = new Date(json.lastUpdated).getMonth(); // 0=Jan, 11=Dec
-let year = currentYear;
+        const currentMonth = new Date(json.lastUpdated).getMonth();
+        let year = currentYear;
 
-// 🧭 Add next-year tag for early months if scraper ran in December
-if (currentMonth === 11 && /^(January|February|March)$/i.test(month)) {
-  year = currentYear + 1;
-}
+        if (currentMonth === 11 && /^(January|February|March)$/i.test(month)) {
+          year = currentYear + 1;
+        }
 
-// Add the date, but append the year *only once per month heading* if relevant
-const displayDate = `${day}${note ? " " + note.trim() : ""}`;
-const monthLabel =
-  currentMonth === 11 && /^(January|February|March)$/i.test(month)
-    ? `${month} ${year}`
-    : month;
+        const displayDate = `${day}${note ? " " + note.trim() : ""}`;
+        const monthLabel =
+          currentMonth === 11 && /^(January|February|March)$/i.test(month)
+            ? `${month} ${year}`
+            : month;
 
-if (!monthGroups[monthLabel]) monthGroups[monthLabel] = [];
-monthGroups[monthLabel].push(displayDate);
-
+        if (!monthGroups[monthLabel]) monthGroups[monthLabel] = [];
+        monthGroups[monthLabel].push(displayDate);
       } else {
         if (!monthGroups["Other"]) monthGroups["Other"] = [];
         monthGroups["Other"].push(fullDate);
       }
     });
 
-    // 🕓 Use lastUpdated from JSON
+    // 🕓 Last updated
     const lastUpdated = new Date(json.lastUpdated).toLocaleString("en-GB", {
       timeZone: "Europe/London",
     });
@@ -79,29 +81,34 @@ monthGroups[monthLabel].push(displayDate);
       <body class="blue-page">
         <div class="container">
           <h1><i class="fas fa-recycle"></i> ${t.blueTitle}</h1>
-          
+
           ${Object.entries(monthGroups)
-            .map(
-              ([month, days]) => `
-              <h3>${month}</h3>
-              <ul>
-                ${days
-                  .map(
-                    (d) => `<li><i class="fas fa-calendar-day"></i> ${d}</li>`
-                  )
-                  .join("")}
-              </ul>`
-            )
+            .map(([month, days]) => {
+              // Extract month + optional year
+              const [rawMonth, year] = month.split(" ");
+              const translatedMonth = translateMonth(rawMonth, t);
+
+              return `
+                <h3>${translatedMonth}${year ? " " + year : ""}</h3>
+                <ul>
+                  ${days
+                    .map(
+                      (d) =>
+                        `<li><i class="fas fa-calendar-day"></i> ${d}</li>`
+                    )
+                    .join("")}
+                </ul>`;
+            })
             .join("")}
-          <p class="last-updated"><i>Last updated: ${lastUpdated}</i></p>
+
+          <p class="last-updated"><i>${t.lastUpdated || "Last updated"}: ${lastUpdated}</i></p>
+          <a class="back" href="/?lang=${lang}">← ${lang === "gd" ? "Air ais" : "Back"}</a>
         </div>
       </body>
       </html>
     `);
   } catch (err) {
     console.error("Blue Bin JSON parse error:", err);
-    res
-      .status(500)
-      .send(`<p>${t.errorFetching || "Error:"} ${err.message}</p>`);
+    res.status(500).send(`<p>${t.errorFetching || "Error:"} ${err.message}</p>`);
   }
 }
