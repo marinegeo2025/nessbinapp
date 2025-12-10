@@ -59,18 +59,19 @@ export default async function handler(req, res) {
                 <h2>${nessBlock.area}</h2>
                 ${groupByMonth(nessBlock.dates)
                   .map(
-                    ([month, monthDates]) => `
-                      <h3>${month}</h3>
-                      <ul>
-                        ${monthDates
-                          .map(
-                            (d) =>
-                              `<li><i class="fas fa-calendar-day"></i> ${d}</li>`
-                          )
-                          .join("")}
-                      </ul>`
-                  )
-                  .join("")}`
+    ([month, monthDates]) => `
+      <h3>${month}</h3>
+      <ul>
+        ${monthDates
+          .map((d) => {
+            // remove the month name if it repeats the heading
+            const cleaned = d.replace(new RegExp("^" + month + "\\s*", "i"), "").trim();
+            return `<li><i class="fas fa-calendar-day"></i> ${cleaned}</li>`;
+          })
+          .join("")}
+      </ul>`
+  )
+  .join("")}
               : "<p>No data found for Ness.</p>"
           }
 
@@ -80,18 +81,19 @@ export default async function handler(req, res) {
                 <h2>${galsonBlock.area}</h2>
                 ${groupByMonth(galsonBlock.dates)
                   .map(
-                    ([month, monthDates]) => `
-                      <h3>${month}</h3>
-                      <ul>
-                        ${monthDates
-                          .map(
-                            (d) =>
-                              `<li><i class="fas fa-calendar-day"></i> ${d}</li>`
-                          )
-                          .join("")}
-                      </ul>`
-                  )
-                  .join("")}`
+    ([month, monthDates]) => `
+      <h3>${month}</h3>
+      <ul>
+        ${monthDates
+          .map((d) => {
+            // remove the month name if it repeats the heading
+            const cleaned = d.replace(new RegExp("^" + month + "\\s*", "i"), "").trim();
+            return `<li><i class="fas fa-calendar-day"></i> ${cleaned}</li>`;
+          })
+          .join("")}
+      </ul>`
+  )
+  .join("")}
               : "<p>No data found for Galson.</p>"
           }
 
