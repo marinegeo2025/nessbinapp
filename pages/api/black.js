@@ -61,8 +61,8 @@ export default async function handler(req, res) {
 
     // Predefine location lists for display
     const areaCoverage = {
-      Ness: "Knockaird, Fivepenny, Eoropie, Port of Ness, Lionel, Eorodale, Adabrock, Skigersta, Cross Skigersta",
-      Galson: "Habost, Swainbost, Cross, North & South Dell",
+      North Ness: "Knockaird, Fivepenny, Eoropie, Port of Ness, Lionel, Eorodale, Adabrock, Skigersta, Cross Skigersta",
+      South Ness: "Habost, Swainbost, Cross, North & South Dell",
     };
 
     const nessBlock = results.find((r) => /ness/i.test(r.area));
@@ -74,7 +74,7 @@ export default async function handler(req, res) {
 
     const galsonHTML = galsonBlock
       ? renderArea(galsonBlock.area, galsonBlock.dates, areaCoverage.Galson)
-      : "<p>No data found for Galson.</p>";
+      : "<p>No data found for Ness.</p>";
 
     res.setHeader("Content-Type", "text/html");
     res.status(200).send(`
@@ -82,7 +82,7 @@ export default async function handler(req, res) {
       <html lang="en">
       <head>
         <meta charset="UTF-8">
-        <title>BLACK Bin Collection Dates (Ness & Galson)</title>
+        <title>BLACK Bin Collection Dates (North Ness & South Ness)</title>
         <link rel="stylesheet" href="/style.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -97,7 +97,7 @@ export default async function handler(req, res) {
       </head>
       <body class="black-page">
         <div class="container">
-          <h1><i class="fas fa-trash-alt"></i> BLACK Bin Collection Dates (Ness & Galson)</h1>
+          <h1><i class="fas fa-trash-alt"></i> BLACK Bin Collection Dates (North Ness & South Ness)</h1>
           ${nessHTML}
           ${galsonHTML}
           <p class="last-updated"><em>LAST UPDATED: ${lastUpdated}</em></p>
