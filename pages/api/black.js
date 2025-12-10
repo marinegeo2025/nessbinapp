@@ -22,20 +22,27 @@ function groupByMonth(dates) {
 }
 
 // Helper: render one area's HTML
-function renderArea(area, dates) {
+function renderArea(area, dates, coverage) {
+  const coverageHTML = coverage
+    ? `<p class="coverage"><strong>Coverage:</strong> ${coverage}</p>`
+    : "";
+
+  const grouped = groupByMonth(dates)
+    .map(([month, monthDates]) => {
+      const cleaned = monthDates
+        .map((d) => {
+          const stripped = d.replace(new RegExp("^" + month + "\\s*", "i"), "").trim();
+          return `<li><i class="fas fa-calendar-day"></i> ${stripped}</li>`;
+        })
+        .join("");
+      return `<h3>${month}</h3><ul>${cleaned}</ul>`;
+    })
+    .join("");
+
   return `
     <h2>${area}</h2>
-    ${groupByMonth(dates)
-      .map(([month, monthDates]) => {
-        const cleaned = monthDates
-          .map((d) => {
-            const stripped = d.replace(new RegExp("^" + month + "\\s*", "i"), "").trim();
-            return `<li><i class="fas fa-calendar-day"></i> ${stripped}</li>`;
-          })
-          .join("");
-        return `<h3>${month}</h3><ul>${cleaned}</ul>`;
-      })
-      .join("")}
+    ${coverageHTML}
+    ${grouped}
   `;
 }
 
@@ -52,15 +59,23 @@ export default async function handler(req, res) {
       timeZone: "Europe/London",
     });
 
+    // Predefine coverage text for Ness and Galson
+    const areaCoverage = {
+      Ness:
+        "Knockaird, Fivepenny, Butt, Eoropie, Port of Ness, Lionel, Eorodale, Adabrock, Cross, Skigersta",
+      Galson:
+        "Habost, Swainbost, Cross, North & South Dell, North & South Galson, Melbost Borve, High Borve, Borve",
+    };
+
     const nessBlock = results.find((r) => /ness/i.test(r.area));
     const galsonBlock = results.find((r) => /galson/i.test(r.area));
 
     const nessHTML = nessBlock
-      ? renderArea(nessBlock.area, nessBlock.dates)
+      ? renderArea(nessBlock.area, nessBlock.dates, areaCoverage.Ness)
       : "<p>No data found for Ness.</p>";
 
     const galsonHTML = galsonBlock
-      ? renderArea(galsonBlock.area, galsonBlock.dates)
+      ? renderArea(galsonBlock.area, galsonBlock.dates, areaCoverage.Galson)
       : "<p>No data found for Galson.</p>";
 
     res.setHeader("Content-Type", "text/html");
@@ -73,6 +88,10 @@ export default async function handler(req, res) {
         <link rel="stylesheet" href="/style.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          .coverage { font-style: italic; margin-top: -8px; margin-bottom: 12px; color: #333; }
+          .coverage strong { font-weight: 600; color: #000; }
+        </style>
       </head>
       <body class="black-page">
         <div class="container">
