@@ -21,7 +21,7 @@ Locals can check bin days on the site or download `.ics` calendar files to sync 
 
 ## 📅 How it Works
 
-1. Scrapers use **axios** + **cheerio** to fetch the CNES bin collection tables.  
+1. Scrapers use **axios** + **cheerio** + **puppeteer** to fetch the CNES bin collection tables.  
 2. Data is parsed into months/dates and shown in clean HTML pages.  
 3. `/api/calendar/north` and `/api/calendar/south` use the same scraped data to build `.ics` files with the **ics** library.  
 4. The `.ics` can be imported into any calendar app.  
@@ -34,7 +34,8 @@ Locals can check bin days on the site or download `.ics` calendar files to sync 
 - [Next.js](https://nextjs.org/)  
 - [Vercel Hosting](https://vercel.com/)  
 - [Axios](https://axios-http.com/) for HTTP requests  
-- [Cheerio](https://cheerio.js.org/) for HTML parsing  
+- [Cheerio](https://cheerio.js.org/) for HTML parsing
+- [Puppeteer](https://pptr.dev/) for automation  
 - [ics](https://www.npmjs.com/package/ics) for calendar file generation  
 - Custom CSS styling  
 
