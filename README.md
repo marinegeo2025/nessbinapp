@@ -64,5 +64,7 @@ Data from: [CNES Bins and Recycling](https://www.cne-siar.gov.uk/bins-and-recycl
 
 - Weekly cron refresh to auto-update `.ics` when CNES adds new months  
 - News and Surf forecast integration 🤙 🌊  
-
+- From broke local binfluencer to global binllionaire
+- From trash talk to perfect gaelic lexicon cearst mhah
+- Ness Bin App is heading to the stars!
 ---
