@@ -59,39 +59,49 @@ jobs:
                 if (btn) btn.click();
               });
 
-              /* ⏳ Wait for accordion panes */
-              await page.waitForSelector(".accordion-pane", { timeout: 30000 });
+              /* ⏳ Green page uses ARIA disclosure buttons */
+              await page.waitForSelector('button[aria-expanded]', { timeout: 30000 });
 
-              /* 🔓 Expand ALL accordions */
+              /* 🔓 Expand all collapsed sections */
               await page.evaluate(() => {
                 document
-                  .querySelectorAll(".accordion-pane__title button")
-                  .forEach(b => b.click());
+                  .querySelectorAll('button[aria-expanded="false"]')
+                  .forEach(btn => btn.click());
               });
 
-              /* ⏳ Wait for dates AFTER expansion */
+              /* ⏳ Wait for any date lists to appear */
               await page.waitForFunction(() => {
-                return document.querySelectorAll(".accordion-pane ol li").length > 0;
+                return document.querySelectorAll("ol li").length > 0;
               }, { timeout: 30000 });
 
               await page.waitForTimeout(500);
 
-              /* 📦 Extract data */
+              /* 📦 Extract data (walk from <ol> to nearest heading/button) */
               const data = await page.evaluate(() => {
                 const items = [];
 
-                document.querySelectorAll(".accordion-pane").forEach(section => {
-                  const area =
-                    section.querySelector(".accordion-pane__title button")
-                      ?.textContent?.trim() || "";
-
-                  const dates = Array.from(
-                    section.querySelectorAll("ol li")
-                  )
+                document.querySelectorAll("ol").forEach(ol => {
+                  const dates = Array.from(ol.querySelectorAll("li"))
                     .map(li => li.textContent.trim())
                     .filter(Boolean);
 
-                  if (area && dates.length) {
+                  if (!dates.length) return;
+
+                  let area = "";
+                  let el = ol;
+
+                  while (el && !area) {
+                    const heading =
+                      el.querySelector?.("h2, h3, h4, button");
+
+                    if (heading && heading.textContent.trim()) {
+                      area = heading.textContent.trim();
+                      break;
+                    }
+                    el = el.parentElement;
+                  }
+
+                  if (area) {
                     items.push({ area, dates });
                   }
                 });
@@ -100,7 +110,7 @@ jobs:
               });
 
               if (!data.length) {
-                throw new Error("No accordion data extracted");
+                throw new Error("No Green bin data extracted");
               }
 
               const result = {
@@ -109,11 +119,15 @@ jobs:
                 results: data
               };
 
-              /* 🛡️ FAILSAFE */
+              /* 🛡️ FAILSAFE: write → validate → replace */
+
               fs.writeFileSync(TMP, JSON.stringify(result, null, 2), "utf8");
 
               const hasNess = result.results.some(
-                r => /ness/i.test(r.area) && Array.isArray(r.dates) && r.dates.length > 0
+                r =>
+                  /ness/i.test(r.area) &&
+                  Array.isArray(r.dates) &&
+                  r.dates.length > 0
               );
 
               if (!hasNess) {
@@ -131,8 +145,8 @@ jobs:
             } catch (err) {
               console.error("❌ Green scrape failed:", err.message);
 
-              if (fs.existsSync("green.tmp.json")) {
-                fs.unlinkSync("green.tmp.json");
+              if (fs.existsSync(TMP)) {
+                fs.unlinkSync(TMP);
               }
 
               process.exit(1);
