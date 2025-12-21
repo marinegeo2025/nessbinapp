@@ -26,11 +26,15 @@ jobs:
       - name: Scrape CNES Wednesday Collections (JSON)
         run: |
           node - <<'EOF'
-          import puppeteer from "puppeteer";
-          import fs from "fs";
+          const puppeteer = require("puppeteer");
+          const fs = require("fs");
 
           const URL =
             "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/organic-food-and-garden-waste-and-mixed-recycling-blue-bin/wednesday-collections";
+
+          const OUTPUT = "wednesday.json";
+          const TMP = "wednesday.tmp.json";
+          const BACKUP = "wednesday.last-good.json";
 
           const timestamp = new Date().toISOString();
 
@@ -47,30 +51,30 @@ jobs:
                 timeout: 120000
               });
 
-              /* 🍪 Accept cookie banner if present */
+              /* 🍪 Accept cookie banner (CI-safe) */
+              await page.waitForTimeout(1000);
               await page.evaluate(() => {
                 const btn = [...document.querySelectorAll("button")]
                   .find(b => /accept/i.test(b.textContent));
                 if (btn) btn.click();
               });
 
-              /* ⏳ Wait for accordion panes to exist */
-              await page.waitForSelector(".accordion-pane", { timeout: 20000 });
+              /* ⏳ Wait for accordion panes */
+              await page.waitForSelector(".accordion-pane", { timeout: 30000 });
 
-              /* ⏳ Wait until at least ONE pane has dates hydrated */
-              await page.waitForFunction(() => {
-                return [...document.querySelectorAll(".accordion-pane")]
-                  .some(p => p.querySelectorAll("ol li").length > 0);
-              }, { timeout: 20000 });
-
-              /* 🔓 Expand all accordions AFTER hydration */
+              /* 🔓 Expand ALL accordions (CNES requires this) */
               await page.evaluate(() => {
                 document
                   .querySelectorAll(".accordion-pane__title button")
-                  .forEach(btn => btn.click());
+                  .forEach(b => b.click());
               });
 
-              await page.waitForTimeout(1000); // let DOM settle
+              /* ⏳ Wait for dates AFTER expansion */
+              await page.waitForFunction(() => {
+                return document.querySelectorAll(".accordion-pane ol li").length > 0;
+              }, { timeout: 30000 });
+
+              await page.waitForTimeout(500);
 
               /* 📦 Extract data */
               const data = await page.evaluate(() => {
@@ -96,7 +100,7 @@ jobs:
               });
 
               if (!data.length) {
-                throw new Error("Accordion panes found but no dates extracted");
+                throw new Error("No accordion data extracted");
               }
 
               const result = {
@@ -105,16 +109,38 @@ jobs:
                 results: data
               };
 
-              fs.writeFileSync(
-                "wednesday.json",
-                JSON.stringify(result, null, 2),
-                "utf8"
+              /* 🛡️ FAILSAFE: write → validate → replace */
+
+              // Write to temp file first
+              fs.writeFileSync(TMP, JSON.stringify(result, null, 2), "utf8");
+
+              // Validation: must contain Ness with dates
+              const hasNess = result.results.some(
+                r => /ness/i.test(r.area) && Array.isArray(r.dates) && r.dates.length > 0
               );
 
+              if (!hasNess) {
+                throw new Error("Failsafe triggered: Ness data missing");
+              }
+
+              // Optional: backup last-good
+              if (fs.existsSync(OUTPUT)) {
+                fs.copyFileSync(OUTPUT, BACKUP);
+              }
+
+              // Atomic replace
+              fs.renameSync(TMP, OUTPUT);
+
               await browser.close();
-              console.log("✅ Wednesday data saved to wednesday.json");
+              console.log("✅ Wednesday data updated safely (failsafe passed)");
             } catch (err) {
-              console.error("❌ Wednesday scrape failed:", err);
+              console.error("❌ Wednesday scrape failed:", err.message);
+
+              // Clean up temp file if present
+              if (fs.existsSync("wednesday.tmp.json")) {
+                fs.unlinkSync("wednesday.tmp.json");
+              }
+
               process.exit(1);
             }
           })();
@@ -125,6 +151,6 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           git pull --rebase origin main || true
-          git add wednesday.json
+          git add wednesday.json wednesday.last-good.json || true
           git commit -m "Auto-update Wednesday bin JSON ($(date -u))" || echo "No changes"
           git push
