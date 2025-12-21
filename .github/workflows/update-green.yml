@@ -1,164 +1,121 @@
-name: Update Friday Green Bin Schedule
+- name: Scrape CNES Friday Green Bin Collections (JSON)
+  run: |
+    node - <<'EOF'
+    const puppeteer = require("puppeteer");
+    const fs = require("fs");
 
-on:
-  schedule:
-    - cron: "0 3 * * *"   # runs daily at 3 AM UTC
-  workflow_dispatch:
+    const URL =
+      "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/glass-green-bin-collections/friday-collections";
 
-jobs:
-  update-green:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    const OUTPUT = "green.json";
+    const TMP = "green.tmp.json";
+    const BACKUP = "green.last-good.json";
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    const timestamp = new Date().toISOString();
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+    (async () => {
+      try {
+        const browser = await puppeteer.launch({
+          headless: true,
+          args: ["--no-sandbox", "--disable-setuid-sandbox"]
+        });
 
-      - name: Install Puppeteer
-        run: npm install puppeteer@21
+        const page = await browser.newPage();
+        await page.goto(URL, {
+          waitUntil: "networkidle2",
+          timeout: 120000
+        });
 
-      - name: Scrape CNES Friday Green Bin Collections (JSON)
-        run: |
-          node - <<'EOF'
-          const puppeteer = require("puppeteer");
-          const fs = require("fs");
+        /* 🍪 Accept cookies (best-effort) */
+        await page.waitForTimeout(1000);
+        await page.evaluate(() => {
+          const btn = [...document.querySelectorAll("button")]
+            .find(b => /accept/i.test(b.textContent));
+          if (btn) btn.click();
+        });
 
-          const URL =
-            "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/glass-green-bin-collections/friday-collections";
+        /* ⏳ Wait for accordion panes */
+        await page.waitForSelector(".accordion-pane", { timeout: 30000 });
 
-          const OUTPUT = "green.json";
-          const TMP = "green.tmp.json";
-          const BACKUP = "green.last-good.json";
+        /* 🔓 Expand all panes */
+        await page.evaluate(() => {
+          document
+            .querySelectorAll('button[aria-expanded="false"]')
+            .forEach(b => b.click());
+        });
 
-          const timestamp = new Date().toISOString();
+        await page.waitForTimeout(500);
 
-          (async () => {
-            try {
-              const browser = await puppeteer.launch({
-                headless: true,
-                args: ["--no-sandbox", "--disable-setuid-sandbox"]
-              });
+        /* 📦 Extract GREEN data (text-first, dates optional) */
+        const data = await page.evaluate(() => {
+          const items = [];
 
-              const page = await browser.newPage();
-              await page.goto(URL, {
-                waitUntil: "networkidle2",
-                timeout: 120000
-              });
+          document.querySelectorAll(".accordion-pane").forEach(pane => {
+            const area =
+              pane.querySelector(".accordion-pane__heading")
+                ?.textContent?.trim() || "";
 
-              /* 🍪 Accept cookie banner */
-              await page.waitForTimeout(1000);
-              await page.evaluate(() => {
-                const btn = [...document.querySelectorAll("button")]
-                  .find(b => /accept/i.test(b.textContent));
-                if (btn) btn.click();
-              });
+            if (!area) return;
 
-              /* ⏳ Green page uses ARIA disclosure buttons */
-              await page.waitForSelector('button[aria-expanded]', { timeout: 30000 });
+            const description =
+              pane.querySelector("p")?.textContent?.trim() || "";
 
-              /* 🔓 Expand all collapsed sections */
-              await page.evaluate(() => {
-                document
-                  .querySelectorAll('button[aria-expanded="false"]')
-                  .forEach(btn => btn.click());
-              });
+            const dates = Array.from(pane.querySelectorAll("ol li"))
+              .map(li => li.textContent.trim())
+              .filter(Boolean);
 
-              /* ⏳ Wait for any date lists to appear */
-              await page.waitForFunction(() => {
-                return document.querySelectorAll("ol li").length > 0;
-              }, { timeout: 30000 });
+            // Require *some* meaningful content
+            if (!dates.length && !description) return;
 
-              await page.waitForTimeout(500);
+            items.push({
+              area,
+              description,
+              dates
+            });
+          });
 
-              /* 📦 Extract data (walk from <ol> to nearest heading/button) */
-              const data = await page.evaluate(() => {
-                const items = [];
+          return items;
+        });
 
-                document.querySelectorAll("ol").forEach(ol => {
-                  const dates = Array.from(ol.querySelectorAll("li"))
-                    .map(li => li.textContent.trim())
-                    .filter(Boolean);
+        if (!data.length) {
+          throw new Error("No Green bin accordion data extracted");
+        }
 
-                  if (!dates.length) return;
+        const result = {
+          lastUpdated: timestamp,
+          count: data.length,
+          results: data
+        };
 
-                  let area = "";
-                  let el = ol;
+        /* 🛡️ FAILSAFE: Ness must exist (dates optional) */
+        fs.writeFileSync(TMP, JSON.stringify(result, null, 2), "utf8");
 
-                  while (el && !area) {
-                    const heading =
-                      el.querySelector?.("h2, h3, h4, button");
+        const hasNess = result.results.some(
+          r =>
+            /ness/i.test(r.area) &&
+            (r.description || (Array.isArray(r.dates) && r.dates.length))
+        );
 
-                    if (heading && heading.textContent.trim()) {
-                      area = heading.textContent.trim();
-                      break;
-                    }
-                    el = el.parentElement;
-                  }
+        if (!hasNess) {
+          throw new Error("Failsafe triggered: Ness entry missing");
+        }
 
-                  if (area) {
-                    items.push({ area, dates });
-                  }
-                });
+        if (fs.existsSync(OUTPUT)) {
+          fs.copyFileSync(OUTPUT, BACKUP);
+        }
 
-                return items;
-              });
+        fs.renameSync(TMP, OUTPUT);
 
-              if (!data.length) {
-                throw new Error("No Green bin data extracted");
-              }
+        await browser.close();
+        console.log("✅ Green bin data updated safely (failsafe passed)");
+      } catch (err) {
+        console.error("❌ Green scrape failed:", err.message);
 
-              const result = {
-                lastUpdated: timestamp,
-                count: data.length,
-                results: data
-              };
+        if (fs.existsSync(TMP)) {
+          fs.unlinkSync(TMP);
+        }
 
-              /* 🛡️ FAILSAFE: write → validate → replace */
-
-              fs.writeFileSync(TMP, JSON.stringify(result, null, 2), "utf8");
-
-              const hasNess = result.results.some(
-                r =>
-                  /ness/i.test(r.area) &&
-                  Array.isArray(r.dates) &&
-                  r.dates.length > 0
-              );
-
-              if (!hasNess) {
-                throw new Error("Failsafe triggered: Ness data missing");
-              }
-
-              if (fs.existsSync(OUTPUT)) {
-                fs.copyFileSync(OUTPUT, BACKUP);
-              }
-
-              fs.renameSync(TMP, OUTPUT);
-
-              await browser.close();
-              console.log("✅ Green bin data updated safely (failsafe passed)");
-            } catch (err) {
-              console.error("❌ Green scrape failed:", err.message);
-
-              if (fs.existsSync(TMP)) {
-                fs.unlinkSync(TMP);
-              }
-
-              process.exit(1);
-            }
-          })();
-          EOF
-
-      - name: Commit updated JSON
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git pull --rebase origin main || true
-          git add green.json green.last-good.json || true
-          git commit -m "Auto-update Green bin JSON ($(date -u))" || echo "No changes"
-          git push
+        process.exit(1);
+      }
+    })();
+    EOF
