@@ -1,121 +1,145 @@
-- name: Scrape CNES Friday Green Bin Collections (JSON)
-  run: |
-    node - <<'EOF'
-    const puppeteer = require("puppeteer");
-    const fs = require("fs");
+name: Update Friday Green Bin Schedule
 
-    const URL =
-      "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/glass-green-bin-collections/friday-collections";
+on:
+  schedule:
+    - cron: "0 3 * * *"   # daily at 3 AM UTC
+  workflow_dispatch:
 
-    const OUTPUT = "green.json";
-    const TMP = "green.tmp.json";
-    const BACKUP = "green.last-good.json";
+jobs:
+  update-green:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
-    const timestamp = new Date().toISOString();
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    (async () => {
-      try {
-        const browser = await puppeteer.launch({
-          headless: true,
-          args: ["--no-sandbox", "--disable-setuid-sandbox"]
-        });
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-        const page = await browser.newPage();
-        await page.goto(URL, {
-          waitUntil: "networkidle2",
-          timeout: 120000
-        });
+      - name: Install Puppeteer
+        run: npm install puppeteer@21
 
-        /* 🍪 Accept cookies (best-effort) */
-        await page.waitForTimeout(1000);
-        await page.evaluate(() => {
-          const btn = [...document.querySelectorAll("button")]
-            .find(b => /accept/i.test(b.textContent));
-          if (btn) btn.click();
-        });
+      - name: Scrape CNES Friday Green Bin Collections (JSON)
+        run: |
+          node - <<'EOF'
+          const puppeteer = require("puppeteer");
+          const fs = require("fs");
 
-        /* ⏳ Wait for accordion panes */
-        await page.waitForSelector(".accordion-pane", { timeout: 30000 });
+          const URL =
+            "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/glass-green-bin-collections/friday-collections";
 
-        /* 🔓 Expand all panes */
-        await page.evaluate(() => {
-          document
-            .querySelectorAll('button[aria-expanded="false"]')
-            .forEach(b => b.click());
-        });
+          const OUTPUT = "green.json";
+          const TMP = "green.tmp.json";
+          const BACKUP = "green.last-good.json";
 
-        await page.waitForTimeout(500);
+          const timestamp = new Date().toISOString();
 
-        /* 📦 Extract GREEN data (text-first, dates optional) */
-        const data = await page.evaluate(() => {
-          const items = [];
+          (async () => {
+            try {
+              const browser = await puppeteer.launch({
+                headless: true,
+                args: ["--no-sandbox", "--disable-setuid-sandbox"]
+              });
 
-          document.querySelectorAll(".accordion-pane").forEach(pane => {
-            const area =
-              pane.querySelector(".accordion-pane__heading")
-                ?.textContent?.trim() || "";
+              const page = await browser.newPage();
+              await page.goto(URL, {
+                waitUntil: "networkidle2",
+                timeout: 120000
+              });
 
-            if (!area) return;
+              // 🍪 accept cookies (best effort)
+              await page.waitForTimeout(1000);
+              await page.evaluate(() => {
+                const btn = [...document.querySelectorAll("button")]
+                  .find(b => /accept/i.test(b.textContent));
+                if (btn) btn.click();
+              });
 
-            const description =
-              pane.querySelector("p")?.textContent?.trim() || "";
+              // ⏳ wait for accordion buttons
+              await page.waitForSelector('button[aria-expanded]', { timeout: 30000 });
 
-            const dates = Array.from(pane.querySelectorAll("ol li"))
-              .map(li => li.textContent.trim())
-              .filter(Boolean);
+              // 🔓 expand all sections
+              await page.evaluate(() => {
+                document
+                  .querySelectorAll('button[aria-expanded="false"]')
+                  .forEach(btn => btn.click());
+              });
 
-            // Require *some* meaningful content
-            if (!dates.length && !description) return;
+              // ⏳ wait for list items
+              await page.waitForFunction(
+                () => document.querySelectorAll("ol li").length > 0,
+                { timeout: 30000 }
+              );
 
-            items.push({
-              area,
-              description,
-              dates
-            });
-          });
+              await page.waitForTimeout(500);
 
-          return items;
-        });
+              // 📦 extract data
+              const data = await page.evaluate(() => {
+                const results = [];
 
-        if (!data.length) {
-          throw new Error("No Green bin accordion data extracted");
-        }
+                document.querySelectorAll(".accordion-pane").forEach(pane => {
+                  const area =
+                    pane.querySelector(".accordion-pane__heading")
+                      ?.textContent?.trim() || "";
 
-        const result = {
-          lastUpdated: timestamp,
-          count: data.length,
-          results: data
-        };
+                  const dates = [...pane.querySelectorAll("ol li")]
+                    .map(li => li.textContent.trim())
+                    .filter(Boolean);
 
-        /* 🛡️ FAILSAFE: Ness must exist (dates optional) */
-        fs.writeFileSync(TMP, JSON.stringify(result, null, 2), "utf8");
+                  if (area && dates.length) {
+                    results.push({ area, dates });
+                  }
+                });
 
-        const hasNess = result.results.some(
-          r =>
-            /ness/i.test(r.area) &&
-            (r.description || (Array.isArray(r.dates) && r.dates.length))
-        );
+                return results;
+              });
 
-        if (!hasNess) {
-          throw new Error("Failsafe triggered: Ness entry missing");
-        }
+              if (!data.length) {
+                throw new Error("No Green bin data extracted");
+              }
 
-        if (fs.existsSync(OUTPUT)) {
-          fs.copyFileSync(OUTPUT, BACKUP);
-        }
+              const result = {
+                lastUpdated: timestamp,
+                count: data.length,
+                results: data
+              };
 
-        fs.renameSync(TMP, OUTPUT);
+              // 🛡️ failsafe
+              fs.writeFileSync(TMP, JSON.stringify(result, null, 2));
 
-        await browser.close();
-        console.log("✅ Green bin data updated safely (failsafe passed)");
-      } catch (err) {
-        console.error("❌ Green scrape failed:", err.message);
+              const hasNess = result.results.some(
+                r => /ness/i.test(r.area) && r.dates.length
+              );
 
-        if (fs.existsSync(TMP)) {
-          fs.unlinkSync(TMP);
-        }
+              if (!hasNess) {
+                throw new Error("Failsafe triggered: Ness data missing");
+              }
 
-        process.exit(1);
-      }
-    })();
-    EOF
+              if (fs.existsSync(OUTPUT)) {
+                fs.copyFileSync(OUTPUT, BACKUP);
+              }
+
+              fs.renameSync(TMP, OUTPUT);
+              await browser.close();
+
+              console.log("✅ Green bin data updated safely");
+            } catch (err) {
+              console.error("❌ Green scrape failed:", err.message);
+              if (fs.existsSync(TMP)) fs.unlinkSync(TMP);
+              process.exit(1);
+            }
+          })();
+          EOF
+
+      - name: Commit updated JSON
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git pull --rebase origin main || true
+          git add green.json green.last-good.json || true
+          git commit -m "Auto-update Green bin JSON ($(date -u))" || echo "No changes"
+          git push
