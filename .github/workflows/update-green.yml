@@ -23,42 +23,85 @@ jobs:
       - name: Install Puppeteer
         run: npm install puppeteer@21
 
-      - name: Scrape CNES Friday Collections (Green Bin JSON)
+      - name: Scrape CNES Friday Green Bin Collections (JSON)
         run: |
           node - <<'EOF'
-          import puppeteer from 'puppeteer';
-          import fs from 'fs';
+          const puppeteer = require("puppeteer");
+          const fs = require("fs");
 
-          const url = 'https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/glass-green-bin-collections/friday-collections';
+          const URL =
+            "https://www.cne-siar.gov.uk/bins-and-recycling/waste-recycling-collections-lewis-and-harris/glass-green-bin-collections/friday-collections";
+
+          const OUTPUT = "green.json";
+          const TMP = "green.tmp.json";
+          const BACKUP = "green.last-good.json";
+
           const timestamp = new Date().toISOString();
 
           (async () => {
             try {
               const browser = await puppeteer.launch({
                 headless: true,
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
+                args: ["--no-sandbox", "--disable-setuid-sandbox"]
               });
+
               const page = await browser.newPage();
-              await page.goto(url, { waitUntil: 'networkidle2', timeout: 120000 });
-
-              // Expand all accordions
-              await page.evaluate(() => {
-                document.querySelectorAll('.accordion-pane__title button').forEach(b => b.click());
+              await page.goto(URL, {
+                waitUntil: "networkidle2",
+                timeout: 120000
               });
-              await page.waitForTimeout(3000);
 
+              /* 🍪 Accept cookie banner */
+              await page.waitForTimeout(1000);
+              await page.evaluate(() => {
+                const btn = [...document.querySelectorAll("button")]
+                  .find(b => /accept/i.test(b.textContent));
+                if (btn) btn.click();
+              });
+
+              /* ⏳ Wait for accordion panes */
+              await page.waitForSelector(".accordion-pane", { timeout: 30000 });
+
+              /* 🔓 Expand ALL accordions */
+              await page.evaluate(() => {
+                document
+                  .querySelectorAll(".accordion-pane__title button")
+                  .forEach(b => b.click());
+              });
+
+              /* ⏳ Wait for dates AFTER expansion */
+              await page.waitForFunction(() => {
+                return document.querySelectorAll(".accordion-pane ol li").length > 0;
+              }, { timeout: 30000 });
+
+              await page.waitForTimeout(500);
+
+              /* 📦 Extract data */
               const data = await page.evaluate(() => {
                 const items = [];
-                document.querySelectorAll('.accordion-pane').forEach(section => {
-                  const area = section.querySelector('button')?.textContent?.trim() || '';
-                  const dateList = Array.from(section.querySelectorAll('ol li')).map(li => li.textContent.trim());
-                  const coverageHeader = section.querySelector('p strong')?.textContent?.includes('locations') 
-                    ? section.querySelector('p + p')?.textContent?.trim() 
-                    : '';
-                  if (area && dateList.length) items.push({ area, dates: dateList, coverage: coverageHeader });
+
+                document.querySelectorAll(".accordion-pane").forEach(section => {
+                  const area =
+                    section.querySelector(".accordion-pane__title button")
+                      ?.textContent?.trim() || "";
+
+                  const dates = Array.from(
+                    section.querySelectorAll("ol li")
+                  )
+                    .map(li => li.textContent.trim())
+                    .filter(Boolean);
+
+                  if (area && dates.length) {
+                    items.push({ area, dates });
+                  }
                 });
+
                 return items;
               });
+
+              if (!data.length) {
+                throw new Error("No accordion data extracted");
+              }
 
               const result = {
                 lastUpdated: timestamp,
@@ -66,21 +109,42 @@ jobs:
                 results: data
               };
 
-              fs.writeFileSync('green.json', JSON.stringify(result, null, 2), 'utf8');
+              /* 🛡️ FAILSAFE */
+              fs.writeFileSync(TMP, JSON.stringify(result, null, 2), "utf8");
+
+              const hasNess = result.results.some(
+                r => /ness/i.test(r.area) && Array.isArray(r.dates) && r.dates.length > 0
+              );
+
+              if (!hasNess) {
+                throw new Error("Failsafe triggered: Ness data missing");
+              }
+
+              if (fs.existsSync(OUTPUT)) {
+                fs.copyFileSync(OUTPUT, BACKUP);
+              }
+
+              fs.renameSync(TMP, OUTPUT);
+
               await browser.close();
-              console.log('✅ Friday Green Bin data saved to green.json');
+              console.log("✅ Green bin data updated safely (failsafe passed)");
             } catch (err) {
-              console.error('❌ Green bin scrape failed:', err);
+              console.error("❌ Green scrape failed:", err.message);
+
+              if (fs.existsSync("green.tmp.json")) {
+                fs.unlinkSync("green.tmp.json");
+              }
+
               process.exit(1);
             }
           })();
           EOF
 
-      - name: Commit and push updates
+      - name: Commit updated JSON
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git pull --rebase origin main || true
-          git add green.json
-          git commit -m "Auto-update Friday Green bin JSON ($(date))" || echo "No changes"
+          git add green.json green.last-good.json || true
+          git commit -m "Auto-update Green bin JSON ($(date -u))" || echo "No changes"
           git push
