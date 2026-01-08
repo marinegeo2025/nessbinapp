@@ -1,53 +1,49 @@
 {
-  "lastUpdated": "2026-01-05T05:02:22.023Z",
+  "lastUpdated": "2026-01-08T20:24:27.663Z",
   "count": 6,
   "results": [
     {
       "area": "South Lochs",
       "dates": [
-        "December 10th",
-        "December 31st",
-        "January 21st"
+        "January 21st",
+        "February 11th"
       ]
     },
     {
       "area": "Outer Point and Bayble",
       "dates": [
-        "December 10th",
-        "December 31st",
-        "January 21st"
+        "January 21st",
+        "February 11th"
       ]
     },
     {
       "area": "Ness",
       "dates": [
-        "December 17th",
-        "January 7th",
-        "January 28th"
+        "January 28th",
+        "February 18th"
       ]
     },
     {
       "area": "Tong",
       "dates": [
-        "December 17th",
-        "January 7th",
-        "January 28th"
+        "January 28th",
+        "February 18th"
       ]
     },
     {
       "area": "Harris Bays",
       "dates": [
-        "December 3rd",
-        "December 24th",
-        "January 14th"
+        "January 14th",
+        "February 4th",
+        "February 25th"
       ]
     },
     {
       "area": "Manor",
       "dates": [
-        "December 3rd",
-        "December 24th",
-        "January 14th"
+        "January 14th",
+        "February 4th",
+        "February 25th"
       ]
     }
   ]
