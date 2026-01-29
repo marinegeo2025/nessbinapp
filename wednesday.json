@@ -1,49 +1,77 @@
 {
-  "lastUpdated": "2026-01-28T20:28:12.805Z",
+  "lastUpdated": "2026-01-29T20:29:07.722Z",
   "count": 6,
   "results": [
     {
       "area": "South Lochs",
       "dates": [
-        "January 21st",
-        "February 11th"
+        "February 11th",
+        "March 4th",
+        "March 25th",
+        "April 15th",
+        "May 6th",
+        "May 27th",
+        "June 17th"
       ]
     },
     {
       "area": "Outer Point and Bayble",
       "dates": [
-        "January 21st",
-        "February 11th"
+        "February 11th",
+        "March 4th",
+        "March 25th",
+        "April 15th",
+        "May 6th",
+        "May 27th",
+        "June 17th"
       ]
     },
     {
       "area": "Ness",
       "dates": [
-        "January 28th",
-        "February 18th"
+        "February 18th",
+        "March 11th",
+        "April 1st",
+        "April 22nd",
+        "May 13th",
+        "June 3rd",
+        "June 24th"
       ]
     },
     {
       "area": "Tong",
       "dates": [
-        "January 28th",
-        "February 18th"
+        "February 18th",
+        "March 11th",
+        "April 1st",
+        "April 22nd",
+        "May 13th",
+        "June 3rd",
+        "June 24th"
       ]
     },
     {
       "area": "Harris Bays",
       "dates": [
-        "January 14th",
         "February 4th",
-        "February 25th"
+        "February 25th",
+        "March 18th",
+        "April 8th",
+        "April 29th",
+        "May 20th",
+        "June 10th"
       ]
     },
     {
       "area": "Manor",
       "dates": [
-        "January 14th",
         "February 4th",
-        "February 25th"
+        "February 25th",
+        "March 18th",
+        "April 8th",
+        "April 29th",
+        "May 20th",
+        "June 10th"
       ]
     }
   ]
