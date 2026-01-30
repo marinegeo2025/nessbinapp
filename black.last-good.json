@@ -1,56 +1,84 @@
 {
-  "lastUpdated": "2026-01-27T18:36:12.679Z",
+  "lastUpdated": "2026-01-29T18:41:54.361Z",
   "count": 6,
   "results": [
     {
       "area": "North Lochs",
       "dates": [
-        "January 22nd",
-        "February 12th"
+        "February 12th",
+        "March 5th",
+        "March 26th",
+        "April 16th",
+        "May 7th",
+        "May 28th",
+        "June 18th"
       ],
       "coverage": ""
     },
     {
       "area": "Tong / Newmarket",
       "dates": [
-        "January 22nd",
-        "February 12th"
+        "February 12th",
+        "March 5th",
+        "March 26th",
+        "April 16th",
+        "May 7th",
+        "May 28th",
+        "June 18th"
       ],
       "coverage": ""
     },
     {
       "area": "Galson",
       "dates": [
-        "January 8th",
         "January 29th",
-        "February 19th"
+        "February 19th",
+        "March 12th",
+        "April 2nd",
+        "April 23rd",
+        "May 14th",
+        "June 4th",
+        "June 25th"
       ],
       "coverage": ""
     },
     {
       "area": "Leverburgh",
       "dates": [
-        "January 8th",
         "January 29th",
-        "February 19th"
+        "February 19th",
+        "March 12th",
+        "April 2nd",
+        "April 23rd",
+        "May 14th",
+        "June 4th",
+        "June 25th"
       ],
       "coverage": ""
     },
     {
       "area": "Ness",
       "dates": [
-        "January 15th",
         "February 5th",
-        "February 26th"
+        "February 26th",
+        "March 19th",
+        "April 9th",
+        "April 30th",
+        "May 21st",
+        "June 11th"
       ],
       "coverage": ""
     },
     {
       "area": "Harris Bays",
       "dates": [
-        "January 15th",
         "February 5th",
-        "February 26th"
+        "February 26th",
+        "March 19th",
+        "April 9th",
+        "April 30th",
+        "May 21st",
+        "June 11th"
       ],
       "coverage": ""
     }
