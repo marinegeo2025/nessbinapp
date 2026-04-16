@@ -1,9 +1,9 @@
 {
-  "lastUpdated": "2026-04-07T19:58:23.463Z",
+  "lastUpdated": "2026-04-16T20:01:07.108Z",
   "count": 15,
   "results": [
     {
-      "area": "Inner Point",
+      "area": "Inner Point and All Stornoway Commercials",
       "dates": [
         "March 6th",
         "May 8th"
@@ -17,7 +17,7 @@
       ]
     },
     {
-      "area": "Melbost / Parkend",
+      "area": "Melbost / Parkend and Weekly Stornoway Commercials",
       "dates": [
         "March 13th",
         "May 15th"
@@ -31,14 +31,14 @@
       ]
     },
     {
-      "area": "Newmarket and Tong",
+      "area": "Newmarket and Tong and Weekly Stornoway Commercials",
       "dates": [
         "March 20th",
         "May 22nd"
       ]
     },
     {
-      "area": "Leurbost and Crossbost / Stornoway Commercials",
+      "area": "Leurbost and Crossbost and Weekly Stornoway Commercials",
       "dates": [
         "March 27th",
         "May 29th"
@@ -53,7 +53,7 @@
       ]
     },
     {
-      "area": "Ranish and Grimshader / Laxdale and Newvalley / Stornoway Commercials",
+      "area": "Ranish and Grimshader / Laxdale and Newvalley / Weekly Stornoway Commercials",
       "dates": [
         "January 30th",
         "April 3rd",
@@ -69,7 +69,7 @@
       ]
     },
     {
-      "area": "Manor",
+      "area": "Manor and Weekly Stornoway Commercials",
       "dates": [
         "February 6th",
         "April 10th",
@@ -77,7 +77,7 @@
       ]
     },
     {
-      "area": "Goathill",
+      "area": "Goathill and Weekly Stornoway Commercials",
       "dates": [
         "February 13th",
         "April 17th",
@@ -93,7 +93,7 @@
       ]
     },
     {
-      "area": "Plasterfield",
+      "area": "Plasterfield and Weekly Stornoway Commercials",
       "dates": [
         "February 20th",
         "April 24th",
@@ -108,7 +108,7 @@
       ]
     },
     {
-      "area": "Marybank / Cearns",
+      "area": "Marybank / Cearns and Weekly Stornoway Commercials",
       "dates": [
         "February 27th",
         "May 1st"
