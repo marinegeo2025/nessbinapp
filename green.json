@@ -1,130 +1,113 @@
 {
-  "lastUpdated": "2026-11-18T01:38:05.232Z",
+  "lastUpdated": "2026-11-20T01:09:00.722Z",
   "count": 15,
   "results": [
     {
       "area": "Inner Point and All Stornoway Commercials",
       "dates": [
-        "July 10th",
-        "September 11th",
-        "November 13th"
+        "November 13th",
+        "January 15th",
+        "March 19th"
       ]
     },
     {
       "area": "Bernera / Linshader / Tolsta Chaolais / Breasclete / Callanish",
       "dates": [
-        "July 17th",
-        "September 18th",
-        "November 20th"
+        "November 20th",
+        "January 22nd",
+        "March 26th"
       ]
     },
     {
       "area": "Melbost / Parkend and Weekly Stornoway Commercials",
       "dates": [
-        "July 17th",
-        "September 18th",
-        "November 20th"
+        "November 20th",
+        "January 22nd",
+        "March 26th"
       ]
     },
     {
       "area": "Brue to Carloway",
       "dates": [
-        "July 24th",
-        "September 25th",
-        "November 27th"
+        "November 27th",
+        "January 29th"
       ]
     },
     {
       "area": "Newmarket and Tong and Weekly Stornoway Commercials",
       "dates": [
-        "July 24th",
-        "September 25th",
-        "November 27th"
+        "November 27th",
+        "January 29th"
       ]
     },
     {
       "area": "Leurbost and Crossbost and Weekly Stornoway Commercials",
       "dates": [
-        "July 31st",
-        "October 2nd",
-        "December 4th"
+        "December 4th",
+        "February 5th"
       ]
     },
     {
       "area": "Ness",
       "dates": [
-        "June 5th",
-        "August 7th",
-        "October 9th",
-        "December 11th"
+        "December 11th",
+        "February 12th"
       ]
     },
     {
       "area": "Ranish and Grimshader / Laxdale and Newvalley / Weekly Stornoway Commercials",
       "dates": [
-        "June 5th",
-        "August 7th",
-        "October 9th",
-        "December 11th"
+        "December 11th",
+        "February 12th"
       ]
     },
     {
       "area": "Barvas to Galson",
       "dates": [
-        "June 12th",
-        "August 14th",
-        "October 16th",
-        "December 18th"
+        "December 18th",
+        "February 19th"
       ]
     },
     {
       "area": "Manor and Weekly Stornoway Commercials",
       "dates": [
-        "June 12th",
-        "August 14th",
-        "October 16th",
-        "December 18th"
+        "December 18th",
+        "February 19th"
       ]
     },
     {
       "area": "Goathill and Weekly Stornoway Commercials",
       "dates": [
-        "June 19th",
-        "August 21st",
-        "October 23rd",
-        "December TBC"
+        "December 26th",
+        "February 26th"
       ]
     },
     {
       "area": "Outer Point",
       "dates": [
-        "June 26th",
-        "August 28th",
-        "October 30th"
+        "December 30th",
+        "March 5th"
       ]
     },
     {
       "area": "Plasterfield and Weekly Stornoway Commercials",
       "dates": [
-        "June 26th",
-        "August 28th",
-        "October 30th"
+        "January 2nd",
+        "March 5th"
       ]
     },
     {
       "area": "North Tolsta / Gress / Back / Coll",
       "dates": [
-        "July 3rd",
-        "September 4th",
-        "November 6th"
+        "January 8th",
+        "March 12th"
       ]
     },
     {
       "area": "Marybank / Cearns and Weekly Stornoway Commercials",
       "dates": [
-        "July 3rd",
-        "September 4th",
-        "November 6th"
+        "January 8th",
+        "March 12th"
       ]
     }
   ]
