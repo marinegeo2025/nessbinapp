@@ -1,102 +1,78 @@
 {
-  "lastUpdated": "2026-11-18T23:57:58.035Z",
+  "lastUpdated": "2026-11-20T00:20:55.231Z",
   "count": 6,
   "results": [
     {
       "area": "North Lochs",
       "dates": [
-        "June 18th",
-        "July 9th",
-        "July 30th",
-        "August 20th",
-        "September 10th",
-        "October 1st",
-        "October 22nd",
-        "November 12th",
         "December 3rd",
-        "December 24th"
+        "December 24th",
+        "January 14th",
+        "February 4th",
+        "February 25th",
+        "March 18th"
       ],
       "coverage": ""
     },
     {
       "area": "Tong / Newmarket",
       "dates": [
-        "June 18th",
-        "July 9th",
-        "July 30th",
-        "August 20th",
-        "September 10th",
-        "October 1st",
-        "October 22nd",
-        "November 12th",
         "December 3rd",
-        "December 24th"
+        "December 24th",
+        "January 14th",
+        "February 4th",
+        "February 25th",
+        "March 18th"
       ],
       "coverage": ""
     },
     {
       "area": "Galson",
       "dates": [
-        "June 4th",
-        "June 25th",
-        "July 16th",
-        "August 6th",
-        "August 27th",
-        "September 17th",
-        "October 8th",
-        "October 29th",
         "November 19th",
         "December 10th",
-        "December 31st"
+        "December 31st",
+        "January 21st",
+        "February 11th",
+        "March 4th",
+        "March 25th"
       ],
       "coverage": ""
     },
     {
       "area": "Leverburgh and Weekly Tarbert Commercials",
       "dates": [
-        "June 4th",
-        "June 25th",
-        "July 16th",
-        "August 6th",
-        "August 27th",
-        "September 17th",
-        "October 8th",
-        "October 29th",
         "November 19th",
         "December 10th",
-        "December 31st"
+        "December 31st",
+        "January 21st",
+        "February 11th",
+        "March 4th",
+        "March 25th"
       ],
       "coverage": ""
     },
     {
       "area": "Ness",
       "dates": [
-        "June 11th",
-        "July 2nd",
-        "July 23rd",
-        "August 13th",
-        "September 3rd",
-        "September 24th",
-        "October 15th",
-        "November 5th",
         "November 26th",
-        "December 17th"
+        "December 17th",
+        "January 7th",
+        "January 28th",
+        "February 18th",
+        "March 11th"
       ],
       "coverage": ""
     },
     {
       "area": "Harris Bays and Weekly Tarbert Commercials",
       "dates": [
-        "June 11th",
-        "July 2nd",
-        "July 23rd",
-        "August 13th",
-        "September 3rd",
-        "September 24th",
-        "October 15th",
-        "November 5th",
         "November 26th",
-        "December 17th"
+        "December 17th",
+        "January 7th",
+        "January 28th",
+        "February 18th",
+        "March 11th"
       ],
       "coverage": ""
     }
