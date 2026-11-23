@@ -1,97 +1,73 @@
 {
-  "lastUpdated": "2026-11-17T02:53:52.617Z",
+  "lastUpdated": "2026-11-22T00:11:29.780Z",
   "count": 6,
   "results": [
     {
       "area": "South Lochs",
       "dates": [
-        "June 17th",
-        "July 8th",
-        "July 29th",
-        "August 19th",
-        "September 9th",
-        "September 30th",
-        "October 21st",
-        "November 11th",
         "December 2nd",
-        "December 23rd"
+        "December 23rd",
+        "January 13th",
+        "February 3rd",
+        "February 24th",
+        "March 17th"
       ]
     },
     {
       "area": "Outer Point and Bayble",
       "dates": [
-        "June 17th",
-        "July 8th",
-        "July 29th",
-        "August 19th",
-        "September 9th",
-        "September 30th",
-        "October 21st",
-        "November 11th",
         "December 2nd",
-        "December 23rd"
+        "December 23rd",
+        "January 13th",
+        "February 3rd",
+        "February 24th",
+        "March 17th"
       ]
     },
     {
       "area": "Ness",
       "dates": [
-        "June 3rd",
-        "June 24th",
-        "July 15th",
-        "August 5th",
-        "August 26th",
-        "September 16th",
-        "October 7th",
-        "October 28th",
-        "November 18th",
         "December 9th",
-        "December 30th"
+        "December 30th",
+        "January 20th",
+        "February 10th",
+        "March 3rd",
+        "March 24th"
       ]
     },
     {
       "area": "Tong",
       "dates": [
-        "June 3rd",
-        "June 24th",
-        "July 15th",
-        "August 5th",
-        "August 26th",
-        "September 16th",
-        "October 7th",
-        "October 28th",
-        "November 18th",
         "December 9th",
-        "December 30th"
+        "December 30th",
+        "January 20th",
+        "February 10th",
+        "March 3rd",
+        "March 24th"
       ]
     },
     {
       "area": "Harris Bays",
       "dates": [
-        "June 10th",
-        "July 1st",
-        "July 22nd",
-        "August 12th",
-        "September 2nd",
-        "September 23rd",
-        "October 14th",
-        "November 4th",
         "November 25th",
-        "December 16th"
+        "December 16th",
+        "January 6th",
+        "January 27th",
+        "February 17th",
+        "March 10th",
+        "March 31st"
       ]
     },
     {
       "area": "Manor",
       "dates": [
-        "June 10th",
-        "July 1st",
-        "July 22nd",
-        "August 12th",
-        "September 2nd",
-        "September 23rd",
-        "October 14th",
-        "November 4th",
         "November 25th",
-        "December 16th"
+        "December 16th",
+        "January 6th",
+        "January 27th",
+        "February 17th",
+        "March 10th",
+        "March 31st"
       ]
     }
   ]
